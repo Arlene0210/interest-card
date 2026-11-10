@@ -184,21 +184,21 @@
   );
 }
 
-/* 叠捏堆叠容器（单只在文档流居中，其余绝对定位叠放） */
+/* 叠捏堆叠容器（首只在文档流居中，其余按蜂窝坐标绝对定位叠放） */
 .squishy-stack {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 100%;
+  width: 96%;
   flex-grow: 1;
   flex-shrink: 1;
   flex-basis: 0;
   min-height: 0;
 }
 
-/* 捏捏球主体：多层渐变拟物（颜色与形变由 TSX 内联提供） */
+/* 捏捏球主体：多层渐变拟物（颜色、宽度与形变由 TSX 内联提供） */
 .squishy-ball {
   position: relative;
   width: 40%;
@@ -218,12 +218,7 @@
   transition: transform 0.12s ease-out;
 }
 
-/* 叠捏多只时缩小主体，避免堆叠溢出 */
-.squishy-stack.is-multi .squishy-ball {
-  width: 34%;
-}
-
-/* 绝对定位的堆叠球（非首只） */
+/* 绝对定位的堆叠球（非首只）：宽度由 TSX 内联统一给值（Lynx 无 auto 收缩） */
 .squishy-ball.is-stacked {
   position: absolute;
   top: 50%;
@@ -231,9 +226,111 @@
   z-index: 2;
 }
 
-/* 前置球（最上层，交互视觉焦点） */
-.squishy-ball.is-front {
-  z-index: 3;
+/* 密集堆叠（数量 > 3）：单只内联宽度控制，缩小阴影避免糊成一团 */
+.squishy-ball.is-dense {
+  box-shadow:
+    inset 0 -1.4vh 2.2vh rgba(160, 120, 100, 0.22),
+    inset 0 0.6vh 1.2vh rgba(255, 255, 255, 0.6),
+    0 0.6vh 1.2vh rgba(22, 24, 35, 0.14);
+}
+
+/* ---------- 耳朵 / 头顶装饰结构件 ---------- */
+
+/* 装饰件基础（顶部左右对开定位） */
+.squishy-ear {
+  position: absolute;
+  box-sizing: border-box;
+}
+
+.squishy-ear-left {
+  top: -14%;
+  left: 12%;
+}
+
+.squishy-ear-right {
+  top: -14%;
+  right: 12%;
+}
+
+/* 圆耳：小圆片，内加深色内耳 */
+.squishy-ear-round {
+  width: 26%;
+  height: 26%;
+  border-radius: 50%;
+  box-shadow:
+    inset 0 -0.6vh 1vh rgba(120, 70, 55, 0.3),
+    inset 0 0.4vh 0.8vh rgba(255, 255, 255, 0.55);
+}
+
+/* 尖耳：三角尖耳（rotate 方块 + 圆角单角） */
+.squishy-ear-point {
+  width: 22%;
+  height: 26%;
+  border-radius: 50% 50% 12% 50%;
+  transform: rotate(-18deg);
+  box-shadow:
+    inset 0 -0.6vh 1vh rgba(120, 70, 55, 0.28),
+    inset 0 0.4vh 0.8vh rgba(255, 255, 255, 0.55);
+}
+
+.squishy-ear-point.squishy-ear-right {
+  transform: rotate(18deg);
+  border-radius: 50% 50% 50% 12%;
+}
+
+/* 犄角：奶龙小角（水滴形） */
+.squishy-ear-horn {
+  width: 18%;
+  height: 24%;
+  border-radius: 60% 60% 50% 50%;
+  transform: rotate(-22deg);
+  box-shadow:
+    inset 0 -0.5vh 0.9vh rgba(120, 70, 55, 0.26),
+    inset 0 0.3vh 0.7vh rgba(255, 255, 255, 0.6);
+}
+
+.squishy-ear-horn.squishy-ear-right {
+  transform: rotate(22deg);
+}
+
+/* 蝴蝶结：草莓熊头顶结（三片结构件，顶部居中） */
+.squishy-ear-bow {
+  top: -18%;
+  left: 50%;
+  width: 44%;
+  height: 24%;
+  transform: translateX(-50%);
+}
+
+.squishy-ear-bow-left,
+.squishy-ear-bow-right {
+  position: absolute;
+  top: 0;
+  width: 42%;
+  height: 100%;
+  background: #ff6b81;
+  border-radius: 60% 60% 45% 45%;
+}
+
+.squishy-ear-bow-left {
+  left: 0;
+  transform: rotate(-16deg);
+}
+
+.squishy-ear-bow-right {
+  right: 0;
+  transform: rotate(16deg);
+}
+
+.squishy-ear-bow-knot {
+  position: absolute;
+  top: 28%;
+  left: 50%;
+  width: 20%;
+  height: 44%;
+  background: #e14e63;
+  border-radius: 30%;
+  transform: translateX(-50%);
 }
 
 /* ---------- 形状变体 ---------- */
@@ -337,49 +434,6 @@
   height: 10%;
 }
 
-/* 层数嵌套色环（≥2 层时由外向内） */
-.squishy-layer-ring {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 74%;
-  height: 74%;
-  margin-left: -37%;
-  margin-top: -37%;
-  box-sizing: border-box;
-  border-radius: 50%;
-  border: 2px solid rgba(122, 82, 62, 0.4);
-}
-
-.squishy-layer-ring-2 {
-  width: 58%;
-  height: 58%;
-  margin-left: -29%;
-  margin-top: -29%;
-  border: 2px solid rgba(122, 82, 62, 0.5);
-}
-
-.squishy-layer-ring-3 {
-  width: 42%;
-  height: 42%;
-  margin-left: -21%;
-  margin-top: -21%;
-  border: 2px solid rgba(122, 82, 62, 0.6);
-}
-
-/* 方包/饭团的色环随形状变椭圆 */
-.squishy-shape-toast .squishy-layer-ring,
-.squishy-shape-toast .squishy-layer-ring-2,
-.squishy-shape-toast .squishy-layer-ring-3 {
-  border-radius: 30%;
-}
-
-.squishy-shape-onigiri .squishy-layer-ring,
-.squishy-shape-onigiri .squishy-layer-ring-2,
-.squishy-shape-onigiri .squishy-layer-ring-3 {
-  border-radius: 46% 46% 40% 40% / 62% 62% 30% 30%;
-}
-
 /* 爆浆内馅芯（颜色由 TSX 内联提供；定位靠内联 translate(-50%,-50%)，不叠加 margin 位移） */
 .squishy-filling-core {
   position: absolute;
@@ -403,14 +457,15 @@
 
 .squishy-crack {
   position: absolute;
-  height: 3px;
+  height: 3.5px;
   border-radius: 999px;
   background: linear-gradient(
     90deg,
-    rgba(96, 56, 44, 0.1) 0%,
-    rgba(96, 56, 44, 0.75) 45%,
-    rgba(96, 56, 44, 0.1) 100%
+    rgba(96, 56, 44, 0.12) 0%,
+    rgba(96, 56, 44, 0.85) 45%,
+    rgba(96, 56, 44, 0.12) 100%
   );
+  box-shadow: 0 0.5px 1px rgba(255, 255, 255, 0.28);
 }
 
 .squishy-crack-1 {
@@ -435,22 +490,292 @@
   transform: rotate(-10deg);
 }
 
-/* 脆皮爆裂碎片（捏爆瞬时飞溅，颜色由 TSX 内联提供） */
+/* 真实爆浆追加裂缝（4-6：放射状更密集，捏爆时外壳崩开感） */
+.squishy-crack-4 {
+  left: 50%;
+  top: 20%;
+  width: 30%;
+  height: 2.5px;
+  transform: rotate(72deg);
+}
+
+.squishy-crack-5 {
+  left: 18%;
+  top: 58%;
+  width: 28%;
+  height: 2.5px;
+  transform: rotate(48deg);
+}
+
+.squishy-crack-6 {
+  left: 52%;
+  top: 58%;
+  width: 26%;
+  height: 2.5px;
+  transform: rotate(-58deg);
+}
+
+/* 顶部破口翻皮：捏爆时裂口两片脆皮翘起（颜色由 TSX 内联提供） */
+.squishy-peel {
+  position: absolute;
+  left: 50%;
+  top: 34%;
+  width: 34px;
+  height: 15px;
+  border-radius: 6px 10px 14px 5px;
+  z-index: 7;
+  box-shadow:
+    inset 0 -3px 4px rgba(120, 70, 55, 0.4),
+    inset 0 2px 3px rgba(255, 255, 255, 0.5),
+    0 1px 2px rgba(22, 24, 35, 0.2);
+  animation-duration: 0.9s;
+  animation-timing-function: cubic-bezier(0.12, 0.75, 0.35, 1);
+  animation-fill-mode: forwards;
+  animation-iteration-count: 1;
+}
+
+.squishy-peel-0 {
+  margin-left: -34px;
+  transform-origin: 100% 100%;
+  animation-name: squishyPeelL;
+}
+
+.squishy-peel-1 {
+  margin-left: 2px;
+  transform-origin: 0% 100%;
+  animation-name: squishyPeelR;
+  animation-delay: 0.05s;
+}
+
+/* 左翘皮：从裂口向上外翻 */
+@keyframes squishyPeelL {
+  0% {
+    transform: rotate(0deg) scale(0.8);
+    opacity: 0;
+  }
+  15% {
+    transform: rotate(-46deg) scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(-66deg) translate(-16px, -12px) scale(0.85);
+    opacity: 0.55;
+  }
+}
+
+/* 右翘皮：从裂口向上外翻 */
+@keyframes squishyPeelR {
+  0% {
+    transform: rotate(0deg) scale(0.8);
+    opacity: 0;
+  }
+  15% {
+    transform: rotate(46deg) scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(66deg) translate(16px, -12px) scale(0.85);
+    opacity: 0.55;
+  }
+}
+
+/* 飞溅浆点：8 颗小瓤点向四周迸溅（颜色由 TSX 内联提供） */
+.squishy-spat {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  margin-left: -4px;
+  margin-top: -4px;
+  border-radius: 50%;
+  z-index: 6;
+  box-shadow: inset 0 -1px 2px rgba(0, 0, 0, 0.14);
+  animation-duration: 0.6s;
+  animation-timing-function: cubic-bezier(0.1, 0.85, 0.3, 1);
+  animation-fill-mode: forwards;
+  animation-iteration-count: 1;
+}
+
+.squishy-spat-0 {
+  animation-name: squishySpat0;
+  animation-delay: 0.02s;
+}
+
+.squishy-spat-1 {
+  animation-name: squishySpat1;
+  animation-delay: 0.06s;
+}
+
+.squishy-spat-2 {
+  animation-name: squishySpat2;
+  animation-delay: 0.03s;
+}
+
+.squishy-spat-3 {
+  animation-name: squishySpat3;
+  animation-delay: 0.09s;
+}
+
+.squishy-spat-4 {
+  animation-name: squishySpat4;
+  animation-delay: 0.05s;
+}
+
+.squishy-spat-5 {
+  animation-name: squishySpat5;
+  animation-delay: 0.11s;
+}
+
+.squishy-spat-6 {
+  animation-name: squishySpat6;
+  animation-delay: 0.07s;
+}
+
+.squishy-spat-7 {
+  animation-name: squishySpat7;
+  animation-delay: 0.12s;
+}
+
+@keyframes squishySpat0 {
+  0% {
+    transform: translate(0, 0) scale(0.4);
+    opacity: 0;
+  }
+  12% {
+    transform: translate(-34px, -20px) scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-76px, -38px) scale(0.3);
+    opacity: 0;
+  }
+}
+
+@keyframes squishySpat1 {
+  0% {
+    transform: translate(0, 0) scale(0.4);
+    opacity: 0;
+  }
+  12% {
+    transform: translate(36px, -16px) scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(82px, -30px) scale(0.3);
+    opacity: 0;
+  }
+}
+
+@keyframes squishySpat2 {
+  0% {
+    transform: translate(0, 0) scale(0.4);
+    opacity: 0;
+  }
+  12% {
+    transform: translate(-14px, -46px) scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-24px, -100px) scale(0.3);
+    opacity: 0;
+  }
+}
+
+@keyframes squishySpat3 {
+  0% {
+    transform: translate(0, 0) scale(0.4);
+    opacity: 0;
+  }
+  12% {
+    transform: translate(22px, 38px) scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(48px, 82px) scale(0.3);
+    opacity: 0;
+  }
+}
+
+@keyframes squishySpat4 {
+  0% {
+    transform: translate(0, 0) scale(0.4);
+    opacity: 0;
+  }
+  12% {
+    transform: translate(-26px, 34px) scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-54px, 76px) scale(0.3);
+    opacity: 0;
+  }
+}
+
+@keyframes squishySpat5 {
+  0% {
+    transform: translate(0, 0) scale(0.4);
+    opacity: 0;
+  }
+  12% {
+    transform: translate(44px, 6px) scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(98px, 12px) scale(0.3);
+    opacity: 0;
+  }
+}
+
+@keyframes squishySpat6 {
+  0% {
+    transform: translate(0, 0) scale(0.4);
+    opacity: 0;
+  }
+  12% {
+    transform: translate(-44px, 2px) scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-96px, 6px) scale(0.3);
+    opacity: 0;
+  }
+}
+
+@keyframes squishySpat7 {
+  0% {
+    transform: translate(0, 0) scale(0.4);
+    opacity: 0;
+  }
+  12% {
+    transform: translate(10px, 40px) scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(18px, 88px) scale(0.3);
+    opacity: 0;
+  }
+}
+
+/* 脆皮爆裂碎片（捏爆瞬时从球缘炸出，颜色由 TSX 内联提供） */
 .squishy-fragment {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 15px;
-  height: 12px;
-  margin-left: -7.5px;
-  margin-top: -6px;
-  border-radius: 4px;
-  z-index: 4;
+  width: 26px;
+  height: 21px;
+  margin-left: -13px;
+  margin-top: -10.5px;
+  border-radius: 7px;
+  z-index: 6;
   box-shadow:
-    inset 0 -2px 3px rgba(120, 70, 55, 0.18),
-    0 1px 2px rgba(255, 255, 255, 0.4);
-  animation-duration: 0.8s;
-  animation-timing-function: ease-out;
+    inset 0 -3px 5px rgba(120, 70, 55, 0.35),
+    inset 0 1px 3px rgba(255, 255, 255, 0.55),
+    0 1px 3px rgba(22, 24, 35, 0.25),
+    -14px 10px 18px -14px rgba(22, 24, 35, 0.45),
+    14px 10px 18px -14px rgba(255, 255, 255, 0.5);
+  animation-duration: 0.7s;
+  animation-timing-function: cubic-bezier(0.1, 0.8, 0.3, 1);
   animation-fill-mode: forwards;
   animation-iteration-count: 1;
 }
@@ -484,107 +809,515 @@
   animation-delay: 0.1s;
 }
 
+/* 细屑（6-11）：更小更密、飞得更远，模拟「屑屑掉得真猛」 */
+.squishy-frag-6,
+.squishy-frag-7,
+.squishy-frag-8,
+.squishy-frag-9,
+.squishy-frag-10,
+.squishy-frag-11 {
+  width: 13px;
+  height: 10px;
+  margin-left: -6.5px;
+  margin-top: -5px;
+  border-radius: 3px;
+  animation-duration: 0.6s;
+}
+
+.squishy-frag-6 {
+  animation-name: squishyFrag6;
+  animation-delay: 0.03s;
+}
+
+.squishy-frag-7 {
+  animation-name: squishyFrag7;
+  animation-delay: 0.09s;
+}
+
+.squishy-frag-8 {
+  animation-name: squishyFrag8;
+  animation-delay: 0.05s;
+}
+
+.squishy-frag-9 {
+  animation-name: squishyFrag9;
+  animation-delay: 0.12s;
+}
+
+.squishy-frag-10 {
+  animation-name: squishyFrag10;
+  animation-delay: 0.07s;
+}
+
+.squishy-frag-11 {
+  animation-name: squishyFrag11;
+  animation-delay: 0.11s;
+}
+
 @keyframes squishyFrag0 {
-  from {
-    transform: translate(0, 0) rotate(0deg) scale(1);
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1.15);
     opacity: 1;
   }
-  to {
-    transform: translate(-86px, -34px) rotate(-40deg) scale(0.6);
+  8% {
+    transform: translate(-52px, -28px) rotate(-26deg) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-150px, -46px) rotate(-58deg) scale(0.62);
     opacity: 0;
   }
 }
 
 @keyframes squishyFrag1 {
-  from {
-    transform: translate(0, 0) rotate(0deg) scale(1);
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1.15);
     opacity: 1;
   }
-  to {
-    transform: translate(74px, -56px) rotate(55deg) scale(0.5);
+  8% {
+    transform: translate(48px, -38px) rotate(34deg) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(128px, -86px) rotate(72deg) scale(0.55);
     opacity: 0;
   }
 }
 
 @keyframes squishyFrag2 {
-  from {
-    transform: translate(0, 0) rotate(0deg) scale(1);
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1.15);
     opacity: 1;
   }
-  to {
-    transform: translate(-40px, -90px) rotate(30deg) scale(0.55);
+  8% {
+    transform: translate(-28px, -52px) rotate(20deg) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-72px, -152px) rotate(44deg) scale(0.6);
     opacity: 0;
   }
 }
 
 @keyframes squishyFrag3 {
-  from {
-    transform: translate(0, 0) rotate(0deg) scale(1);
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1.15);
     opacity: 1;
   }
-  to {
-    transform: translate(52px, 44px) rotate(-70deg) scale(0.5);
+  8% {
+    transform: translate(38px, 32px) rotate(-48deg) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(92px, 82px) rotate(-96deg) scale(0.55);
     opacity: 0;
   }
 }
 
 @keyframes squishyFrag4 {
-  from {
-    transform: translate(0, 0) rotate(0deg) scale(1);
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1.15);
     opacity: 1;
   }
-  to {
-    transform: translate(-66px, 68px) rotate(80deg) scale(0.6);
+  8% {
+    transform: translate(-44px, 46px) rotate(52deg) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-112px, 122px) rotate(104deg) scale(0.62);
     opacity: 0;
   }
 }
 
 @keyframes squishyFrag5 {
-  from {
-    transform: translate(0, 0) rotate(0deg) scale(1);
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1.15);
     opacity: 1;
   }
-  to {
-    transform: translate(92px, 14px) rotate(-25deg) scale(0.45);
+  8% {
+    transform: translate(56px, 10px) rotate(-16deg) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(158px, 28px) rotate(-38deg) scale(0.5);
     opacity: 0;
   }
 }
 
-/* 爆浆滴落（有馅捏爆时，颜色由 TSX 内联提供） */
+@keyframes squishyFrag6 {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1.1);
+    opacity: 1;
+  }
+  6% {
+    transform: translate(-56px, -36px) rotate(32deg) scale(0.95);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-166px, -92px) rotate(58deg) scale(0.4);
+    opacity: 0;
+  }
+}
+
+@keyframes squishyFrag7 {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1.1);
+    opacity: 1;
+  }
+  6% {
+    transform: translate(52px, -54px) rotate(-38deg) scale(0.95);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(142px, -138px) rotate(-74deg) scale(0.38);
+    opacity: 0;
+  }
+}
+
+@keyframes squishyFrag8 {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1.1);
+    opacity: 1;
+  }
+  6% {
+    transform: translate(-12px, -58px) rotate(16deg) scale(0.95);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-34px, -176px) rotate(34deg) scale(0.35);
+    opacity: 0;
+  }
+}
+
+@keyframes squishyFrag9 {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1.1);
+    opacity: 1;
+  }
+  6% {
+    transform: translate(60px, 22px) rotate(-28deg) scale(0.95);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(178px, 66px) rotate(-52deg) scale(0.42);
+    opacity: 0;
+  }
+}
+
+@keyframes squishyFrag10 {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1.1);
+    opacity: 1;
+  }
+  6% {
+    transform: translate(-62px, 28px) rotate(42deg) scale(0.95);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-182px, 88px) rotate(78deg) scale(0.4);
+    opacity: 0;
+  }
+}
+
+@keyframes squishyFrag11 {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1.1);
+    opacity: 1;
+  }
+  6% {
+    transform: translate(16px, 58px) rotate(-18deg) scale(0.95);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(42px, 162px) rotate(-42deg) scale(0.38);
+    opacity: 0;
+  }
+}
+
+/* 爆浆白闪：捏爆瞬间中心一闪（盖在球体上） */
+.squishy-burst-flash {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 54%;
+  height: 54%;
+  margin-left: -27%;
+  margin-top: -27%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(255, 248, 230, 0.95) 38%,
+    rgba(255, 255, 255, 0.45) 62%,
+    rgba(255, 255, 255, 0) 76%
+  );
+  z-index: 7;
+  animation: squishyBurstFlash 0.22s ease-out forwards;
+  animation-iteration-count: 1;
+}
+
+@keyframes squishyBurstFlash {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  18% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2.8);
+    opacity: 0;
+  }
+}
+
+/* 爆浆冲击波：从球心向外扩散的脆皮震动环 */
+.squishy-burst-wave {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 52%;
+  height: 52%;
+  margin-left: -26%;
+  margin-top: -26%;
+  border-radius: 50%;
+  border: 4px solid rgba(255, 214, 166, 0.9);
+  background: rgba(255, 230, 200, 0.12);
+  z-index: 7;
+  animation: squishyBurstWave 0.55s ease-out forwards;
+  animation-iteration-count: 1;
+}
+
+@keyframes squishyBurstWave {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.95;
+  }
+  70% {
+    opacity: 0.35;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+/* 爆浆浆帽：捏爆时中心喷涌大鼓包（大面积覆盖 + 越过球缘外溢，无馅用米白内瓤） */
+.squishy-burst-cap {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 48%;
+  height: 40%;
+  margin-left: -24%;
+  margin-top: -14%;
+  border-radius: 50% 50% 42% 42% / 58% 58% 34% 34%;
+  z-index: 7;
+  box-shadow:
+    inset 0 -6px 10px rgba(0, 0, 0, 0.16),
+    inset 0 4px 7px rgba(255, 255, 255, 0.6),
+    inset -5px -3px 9px rgba(255, 255, 255, 0.3),
+    0 3px 6px rgba(22, 24, 35, 0.2);
+  animation: squishyBurstCap 1.3s ease-out forwards;
+  animation-iteration-count: 1;
+}
+
+@keyframes squishyBurstCap {
+  0% {
+    transform: scale(0.25) translateY(8px);
+    opacity: 0;
+  }
+  10% {
+    transform: scale(1.45) translateY(-10px);
+    opacity: 0.98;
+  }
+  40% {
+    transform: scale(1.12) translateY(-2px);
+    opacity: 0.94;
+  }
+  100% {
+    transform: scale(0.8) translateY(10px);
+    opacity: 0;
+  }
+}
+
+/* 爆浆滴落（捏爆时，颜色由 TSX 内联提供）：挂壁粘丝带 + 下坠滴头（起点贴塌陷球面） */
 .squishy-jam {
   position: absolute;
   left: 50%;
-  top: 56%;
-  width: 11px;
-  height: 14px;
-  margin-left: -5.5px;
-  border-radius: 50% 50% 62% 62%;
-  z-index: 4;
-  animation: squishyJamDrop 0.85s ease-in forwards;
+  top: 34%;
+  width: 16px;
+  height: 19px;
+  margin-left: -8px;
+  border-radius: 46% 46% 50% 50% / 60% 60% 40% 40%;
+  z-index: 7;
+  box-shadow:
+    inset 0 -2px 5px rgba(0, 0, 0, 0.15),
+    inset 0 2px 3px rgba(255, 255, 255, 0.5);
+  animation: squishyJamDrop 1.3s ease-in forwards;
   animation-iteration-count: 1;
 }
 
 .squishy-jam-1 {
   margin-left: -26px;
+  animation-duration: 1.35s;
   animation-delay: 0.08s;
 }
 
 .squishy-jam-2 {
   margin-left: 16px;
+  animation-duration: 1.25s;
   animation-delay: 0.14s;
 }
 
-/* 左右飞溅浆滴 */
+/* 追加下坠拉丝大滴（3-4）：更慢、更长、拉丝感更强 */
 .squishy-jam-3 {
-  margin-left: -42px;
-  margin-top: -14px;
-  animation: squishyJamSplashL 0.7s ease-out forwards;
+  margin-left: -8px;
+  animation-duration: 1.35s;
+  animation-delay: 0.1s;
 }
 
 .squishy-jam-4 {
-  margin-left: 34px;
-  margin-top: -12px;
-  animation: squishyJamSplashR 0.7s ease-out forwards;
+  margin-left: 30px;
+  animation-duration: 1.4s;
+  animation-delay: 0.18s;
+}
+
+/* 左右斜飞浆滴（5-8）：模拟爆浆瞬间向四周迸溅 */
+.squishy-jam-5 {
+  margin-left: -44px;
+  margin-top: -16px;
+  animation: squishyJamSplashL 0.75s ease-out forwards;
+}
+
+.squishy-jam-6 {
+  margin-left: 36px;
+  margin-top: -14px;
+  animation: squishyJamSplashR 0.75s ease-out forwards;
+}
+
+.squishy-jam-7 {
+  margin-left: -30px;
+  margin-top: -8px;
+  animation: squishyJamSplashFarL 0.8s ease-out forwards;
+  animation-delay: 0.06s;
+}
+
+.squishy-jam-8 {
+  margin-left: 24px;
+  margin-top: -6px;
+  animation: squishyJamSplashFarR 0.8s ease-out forwards;
+  animation-delay: 0.1s;
+}
+
+/* 边缘溢流滴（9-12）：从浆帽边缘越线外溢、沿球缘下滑 */
+.squishy-jam-9 {
+  top: 44%;
+  margin-left: -52px;
+  margin-top: -20px;
+  width: 14px;
+  height: 17px;
+  animation: squishyJamEdgeL 1.15s ease-in forwards;
+  animation-delay: 0.12s;
+}
+
+.squishy-jam-10 {
+  top: 44%;
+  margin-left: 44px;
+  margin-top: -18px;
+  width: 13px;
+  height: 16px;
+  animation: squishyJamEdgeR 1.2s ease-in forwards;
+  animation-delay: 0.16s;
+}
+
+.squishy-jam-11 {
+  top: 44%;
+  margin-left: -66px;
+  margin-top: -4px;
+  width: 11px;
+  height: 14px;
+  animation: squishyJamEdgeFarL 1.05s ease-in forwards;
+  animation-delay: 0.2s;
+}
+
+.squishy-jam-12 {
+  top: 44%;
+  margin-left: 58px;
+  margin-top: -2px;
+  width: 11px;
+  height: 14px;
+  animation: squishyJamEdgeFarR 1.1s ease-in forwards;
+  animation-delay: 0.24s;
+}
+
+/* 边缘溢流：从帽沿越线滑落到球缘外 */
+@keyframes squishyJamEdgeL {
+  0% {
+    transform: translate(0, 0) scale(0.5, 0.6);
+    opacity: 0;
+  }
+  15% {
+    transform: translate(-6px, 2px) scale(0.9, 1.15);
+    opacity: 0.95;
+  }
+  60% {
+    transform: translate(-14px, 34px) scale(0.6, 1.9);
+    opacity: 0.75;
+  }
+  100% {
+    transform: translate(-18px, 62px) scale(0.85, 1.1);
+    opacity: 0;
+  }
+}
+
+@keyframes squishyJamEdgeR {
+  0% {
+    transform: translate(0, 0) scale(0.5, 0.6);
+    opacity: 0;
+  }
+  15% {
+    transform: translate(6px, 2px) scale(0.9, 1.15);
+    opacity: 0.95;
+  }
+  60% {
+    transform: translate(14px, 36px) scale(0.6, 1.9);
+    opacity: 0.75;
+  }
+  100% {
+    transform: translate(18px, 64px) scale(0.85, 1.1);
+    opacity: 0;
+  }
+}
+
+@keyframes squishyJamEdgeFarL {
+  0% {
+    transform: translate(0, 0) scale(0.4, 0.55);
+    opacity: 0;
+  }
+  18% {
+    transform: translate(-8px, 4px) scale(0.85, 1.1);
+    opacity: 0.92;
+  }
+  100% {
+    transform: translate(-16px, 54px) scale(0.75, 1.05);
+    opacity: 0;
+  }
+}
+
+@keyframes squishyJamEdgeFarR {
+  0% {
+    transform: translate(0, 0) scale(0.4, 0.55);
+    opacity: 0;
+  }
+  18% {
+    transform: translate(8px, 4px) scale(0.85, 1.1);
+    opacity: 0.92;
+  }
+  100% {
+    transform: translate(16px, 56px) scale(0.75, 1.05);
+    opacity: 0;
+  }
 }
 
 @keyframes squishyJamSplashL {
@@ -592,8 +1325,11 @@
     transform: translate(0, 0) scale(0.5, 0.7);
     opacity: 1;
   }
+  60% {
+    opacity: 0.9;
+  }
   100% {
-    transform: translate(-38px, 26px) scale(0.9, 1.3);
+    transform: translate(-66px, 42px) scale(0.85, 1.5);
     opacity: 0;
   }
 }
@@ -603,27 +1339,62 @@
     transform: translate(0, 0) scale(0.5, 0.7);
     opacity: 1;
   }
+  60% {
+    opacity: 0.9;
+  }
   100% {
-    transform: translate(36px, 28px) scale(0.9, 1.3);
+    transform: translate(62px, 46px) scale(0.85, 1.5);
     opacity: 0;
   }
 }
 
-@keyframes squishyJamDrop {
+@keyframes squishyJamSplashFarL {
   0% {
     transform: translate(0, 0) scale(0.4, 0.6);
     opacity: 0.95;
   }
-  55% {
-    opacity: 0.9;
-  }
   100% {
-    transform: translate(0, 74px) scale(1, 1.7);
+    transform: translate(-92px, 20px) scale(0.75, 1.7);
     opacity: 0;
   }
 }
 
-/* ---------- 右侧叠捏数量按钮 ---------- */
+@keyframes squishyJamSplashFarR {
+  0% {
+    transform: translate(0, 0) scale(0.4, 0.6);
+    opacity: 0.95;
+  }
+  100% {
+    transform: translate(86px, 26px) scale(0.75, 1.7);
+    opacity: 0;
+  }
+}
+
+/* 真实爆浆下坠：粘丝带先挂壁拉长（细长条 + 顶端连球），后半段滴头脱离坠地 */
+@keyframes squishyJamDrop {
+  0% {
+    transform: translate(0, -4px) scale(0.5, 0.6);
+    opacity: 0;
+  }
+  10% {
+    transform: translate(0, 0px) scale(0.85, 1.3);
+    opacity: 0.96;
+  }
+  35% {
+    transform: translate(0, 26px) scale(0.55, 2);
+    opacity: 0.95;
+  }
+  75% {
+    transform: translate(0, 60px) scale(0.44, 3);
+    opacity: 0.72;
+  }
+  100% {
+    transform: translate(0, 92px) scale(0.95, 1.15);
+    opacity: 0;
+  }
+}
+
+/* ---------- 右侧叠捏数量（快捷档 + 自定义输入） ---------- */
 
 .squishy-stack-picker {
   position: absolute;
@@ -633,7 +1404,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.2vh;
+  gap: 1vh;
   z-index: 5;
 }
 
@@ -641,8 +1412,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 42px;
-  height: 42px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.14);
   border: 1px solid rgba(255, 255, 255, 0.28);
@@ -662,6 +1433,47 @@
   font-size: 12px;
   font-weight: 700;
   line-height: 14px;
+  text-align: center;
+}
+
+/* 自定义数量输入胶囊 */
+.squishy-stack-input {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 44px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  padding: 0.4vh 0;
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: auto;
+}
+
+.squishy-stack-input.is-hint {
+  border: 1px solid #ffd36e;
+  box-shadow: 0 0 0.8vh rgba(255, 211, 110, 0.4);
+}
+
+.squishy-stack-input-label {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 9px;
+  font-weight: 500;
+  line-height: 11px;
+}
+
+.squishy-stack-input-field {
+  width: 36px;
+  height: 22px;
+  margin-top: 0.2vh;
+  padding: 0;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 22px;
   text-align: center;
 }
 
@@ -903,10 +1715,6 @@
   border-radius: 46% 46% 40% 40% / 62% 62% 30% 30%;
 }
 
-.squishy-diy-preview .squishy-layer-ring {
-  border-width: 1.5px;
-}
-
 /* 配置行区 */
 .squishy-diy-rows {
   display: flex;
@@ -918,7 +1726,7 @@
   flex-shrink: 1;
   flex-basis: 0;
   min-width: 0;
-  gap: 1.1vh;
+  gap: 0.9vh;
 }
 
 .squishy-diy-row {
@@ -1045,6 +1853,58 @@
   border-radius: 50%;
   margin-bottom: 0.3vh;
   box-sizing: border-box;
+}
+
+/* 形象预设选项（色点 + 名称） */
+.squishy-diy-preset-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  margin-bottom: 0.3vh;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-sizing: border-box;
+  box-shadow: inset 0 -2px 3px rgba(120, 70, 55, 0.25);
+}
+
+/* 耳朵选项迷你图标（CSS 结构件） */
+.squishy-diy-ear-icon {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  margin-bottom: 0.3vh;
+  box-sizing: border-box;
+}
+
+.squishy-ear-icon-none {
+  border: 1px dashed rgba(122, 82, 62, 0.35);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.squishy-ear-icon-round {
+  border-radius: 50%;
+  background: #e8c9b8;
+  border: 1px solid rgba(122, 82, 62, 0.25);
+}
+
+.squishy-ear-icon-point {
+  border-radius: 50% 50% 12% 50%;
+  background: #e8c9b8;
+  border: 1px solid rgba(122, 82, 62, 0.25);
+  transform: rotate(-18deg);
+}
+
+.squishy-ear-icon-bow {
+  border-radius: 50%;
+  background: #ff6b81;
+  border: 1px solid rgba(225, 78, 99, 0.5);
+}
+
+.squishy-ear-icon-horn {
+  border-radius: 60% 60% 50% 50%;
+  background: #ffd45e;
+  border: 1px solid rgba(190, 140, 40, 0.35);
+  transform: rotate(-22deg);
 }
 
 /* 层数选项主字 */

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { View, Text } from "@tarojs/components";
+import { View, Text, Input } from "@tarojs/components";
 import { useLoad, useCardTaro } from "@tarojs/taro";
 import {
   extractOpenCardLoadData,
@@ -20,18 +20,20 @@ const POWER_STEP = 8;
 const FEEDBACK_MS = 1600;
 /** 解压值上报节流间隔（ms） */
 const REPORT_THROTTLE_MS = 1200;
-/** 叠捏连播音效间隔（ms） */
-const STACK_SOUND_GAP_MS = 90;
-/** 爆裂碎片动画清理时长（ms） */
-const BURST_MS = 900;
-/** 叠捏堆叠错位步长（px） */
-const STACK_OFFSET_PX = 34;
+/** 叠捏连播音效基础间隔（ms，数量越大越密） */
+const STACK_SOUND_GAP_MS = 55;
+/** 爆裂动画总时长（ms）：碎片飞溅 0.85s + 浆液挂壁拉丝 1.3s */
+const BURST_MS = 1400;
+/** 数量输入上限 */
+const STACK_MAX = 100;
+/** 音效连播抽样上限（超过该数量按比例抽样播放） */
+const SOUND_SAMPLE_MAX = 12;
 /** 裂纹浮现的最低力度（%） */
 const CRACK_MIN_POWER = 60;
 /** 三处凹陷依次出现的力度阈值（%） */
 const DENT_STEPS = [30, 60, 90];
-/** 层数色环基础透明度（由外向内） */
-const RING_OPACITIES = [0.72, 0.48, 0.3];
+/** 数量越界提示时长（ms） */
+const STACK_HINT_MS = 800;
 
 /** 松手反馈对象 */
 interface PressFeedback {
@@ -50,15 +52,48 @@ function matchLevel(power: number, levels: SqueezeLevel[]): SqueezeLevel | null 
   return hit;
 }
 
-/** 叠捏堆叠偏移（JS 几何计算，逐只错位） */
-function stackOffset(index: number, total: number): { x: number; y: number } {
-  if (total <= 1) return { x: 0, y: 0 };
-  const spread = total === 2 ? 1 : 0.9;
-  const mid = (total - 1) / 2;
-  return {
-    x: (index - mid) * STACK_OFFSET_PX * spread,
-    y: Math.abs(index - mid) * STACK_OFFSET_PX * 0.35,
-  };
+/**
+ * 蜂窝密堆布局（JS 计算，返回容器坐标百分比 -50% ~ +50%）：按数量决定列数与行列偏移。
+ * 1 只居中大号；2-3 只品字对开；4-7 两列蜂窝；8-19 三列蜂窝；20-49 四列；50+ 五列密堆。
+ * 调用方将百分比换算为容器 px 偏移（百分比偏移相对球体自身尺寸，大数量时会挤成一团）。
+ */
+function stackLayout(count: number): { x: number; y: number }[] {
+  const points: { x: number; y: number }[] = [];
+  if (count <= 1) {
+    return [{ x: 0, y: 0 }];
+  }
+  let cols = 1;
+  if (count <= 3) cols = count;
+  else if (count <= 7) cols = 2;
+  else if (count <= 19) cols = 3;
+  else if (count <= 49) cols = 4;
+  else cols = 5;
+  // 行列蜂窝：偶数行错开半格，形成紧密堆叠的「捏捏山」
+  const rows = Math.ceil(count / cols);
+  const stepX = 100 / cols;
+  const stepY = 100 / rows;
+  for (let i = 0; i < count; i += 1) {
+    const row = Math.floor(i / cols);
+    const col = i % cols;
+    const rowOffset = row % 2 === 1 ? stepX * 0.5 : 0;
+    const colLimit = Math.min(cols, count - row * cols);
+    let x = (col + (rowOffset > 0 ? 0.5 : 0)) * stepX;
+    if (colLimit < cols && rowOffset > 0) {
+      x = (col + 0.5 + (cols - colLimit) * 0.5) * stepX;
+    }
+    points.push({ x: x - 50, y: (row + 0.5) * stepY - 50 });
+  }
+  return points;
+}
+
+/** 单只捏捏宽度占比（%）：数量越多单只越小，形成大→小的视觉密度 */
+function stackBallWidth(count: number): number {
+  if (count <= 1) return 40;
+  if (count <= 3) return 30;
+  if (count <= 7) return 24;
+  if (count <= 19) return 18;
+  if (count <= 49) return 14;
+  return 11;
 }
 
 /** 渲染爱心形状的三片结构件（容器内按百分比定位，可任意缩放） */
@@ -82,6 +117,66 @@ function renderHeartParts(color: string, keyPrefix: string) {
   ];
 }
 
+/**
+ * 渲染耳朵/头顶装饰结构件（CSS 拼装，按身体顶部定位）。
+ * round 圆耳 / point 尖耳 / bow 蝴蝶结 / horn 犄角。
+ */
+function renderEarParts(earId: string, color: string, keyPrefix: string) {
+  if (earId === "none") return null;
+  if (earId === "round") {
+    return [
+      <View
+        key={`${keyPrefix}-ear-l`}
+        className="squishy-ear squishy-ear-round squishy-ear-left"
+        style={`background-color: ${color};`}
+      />,
+      <View
+        key={`${keyPrefix}-ear-r`}
+        className="squishy-ear squishy-ear-round squishy-ear-right"
+        style={`background-color: ${color};`}
+      />,
+    ];
+  }
+  if (earId === "point") {
+    return [
+      <View
+        key={`${keyPrefix}-ear-l`}
+        className="squishy-ear squishy-ear-point squishy-ear-left"
+        style={`background-color: ${color};`}
+      />,
+      <View
+        key={`${keyPrefix}-ear-r`}
+        className="squishy-ear squishy-ear-point squishy-ear-right"
+        style={`background-color: ${color};`}
+      />,
+    ];
+  }
+  if (earId === "bow") {
+    return [
+      <View key={`${keyPrefix}-bow`} className="squishy-ear squishy-ear-bow">
+        <View className="squishy-ear-bow-left" />
+        <View className="squishy-ear-bow-right" />
+        <View className="squishy-ear-bow-knot" />
+      </View>,
+    ];
+  }
+  if (earId === "horn") {
+    return [
+      <View
+        key={`${keyPrefix}-horn-l`}
+        className="squishy-ear squishy-ear-horn squishy-ear-left"
+        style={`background-color: ${color};`}
+      />,
+      <View
+        key={`${keyPrefix}-horn-r`}
+        className="squishy-ear squishy-ear-horn squishy-ear-right"
+        style={`background-color: ${color};`}
+      />,
+    ];
+  }
+  return null;
+}
+
 export default function IndexPage() {
   const taroRef = useRef<openCardTaro>();
   const mountedRef = useRef(true);
@@ -102,14 +197,17 @@ export default function IndexPage() {
   const [bestLabel, setBestLabel] = useState<string>("—"); // 最高力度档
   const [soundOn, setSoundOn] = useState(true);
 
-  // 脆皮爽感迭代状态
+  // v3 状态
   const [diyOpen, setDiyOpen] = useState(false); // DIY 弹层
-  const [stackCount, setStackCount] = useState(1); // 叠捏数量 1-3
+  const [stackCount, setStackCount] = useState(1); // 叠捏数量 1-100
+  const [stackInput, setStackInput] = useState("1"); // 自定义数量输入框文本
+  const [stackHint, setStackHint] = useState(false); // 数量越界提示
   const [bursting, setBursting] = useState(false); // 爆裂动画中
-  const [selShape, setSelShape] = useState<string>("round"); // DIY 选中形状
-  const [selColor, setSelColor] = useState<string>("peach"); // DIY 选中颜色
-  const [selFilling, setSelFilling] = useState<string>("strawberry"); // DIY 选内馅
-  const [selLayers, setSelLayers] = useState(1); // DIY 选层数
+  const [selPreset, setSelPreset] = useState<string>(""); // DIY 选中形象预设（空=自定义）
+  const [selShape, setSelShape] = useState<string>("round"); // DIY 身体形状
+  const [selEar, setSelEar] = useState<string>("none"); // DIY 耳朵
+  const [selColor, setSelColor] = useState<string>("strawbear"); // DIY 配色
+  const [selFilling, setSelFilling] = useState<string>("strawberry"); // DIY 内馅
   const [customToy, setCustomToy] = useState<SquishyToy | null>(null); // 用户 DIY 的捏捏
 
   // 长生命周期逻辑状态（ref 镜像）
@@ -129,7 +227,10 @@ export default function IndexPage() {
   const powerRef = useRef(0);
   const pressingRef = useRef(false);
   const stackCountRef = useRef(1);
-  const layerMultiplierRef = useRef(1);
+  const stackHintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // 堆叠容器实测尺寸（px）：百分比布局点换算 px 偏移用（百分比偏移相对球体自身，大数量会挤成一团）
+  const [stackSize, setStackSize] = useState<{ w: number; h: number } | null>(null);
+  const stackSizeQueriedRef = useRef(false);
 
   useEffect(() => {
     soundOnRef.current = soundOn;
@@ -156,6 +257,7 @@ export default function IndexPage() {
       if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
       if (burstTimerRef.current) clearTimeout(burstTimerRef.current);
       if (reportTimerRef.current) clearTimeout(reportTimerRef.current);
+      if (stackHintTimerRef.current) clearTimeout(stackHintTimerRef.current);
       soundTimersRef.current.forEach((timer) => clearTimeout(timer));
       soundTimersRef.current = [];
     };
@@ -198,27 +300,46 @@ export default function IndexPage() {
     taroRef.current = taro;
     taroApiRef.current = taro;
     tryBootstrapCardData();
+    // 量取堆叠容器实际尺寸（px），用于百分比布局点 → px 偏移换算
+    if (!stackSizeQueriedRef.current) {
+      stackSizeQueriedRef.current = true;
+      try {
+        const query = taro.createSelectorQuery() as unknown as {
+          select: (selector: string) => unknown;
+        };
+        const chain = query.select(".squishy-stack") as unknown as {
+          boundingClientRect: () => unknown;
+        };
+        const exec = chain.boundingClientRect() as unknown as {
+          exec: (callback: (result: unknown) => void) => void;
+        };
+        exec.exec((result: unknown) => {
+          const rect = Array.isArray(result) ? (result[0] as { width?: number; height?: number } | null) : null;
+          if (rect && typeof rect.width === "number" && typeof rect.height === "number" && mountedRef.current) {
+            setStackSize({ w: rect.width, h: rect.height });
+          }
+        });
+      } catch (error) {
+        console.error("[squishy] measure stack failed", error);
+      }
+    }
   });
 
   const toys = cardData?.views?.initial?.toys ?? [];
   const levels = cardData?.views?.initial?.levels ?? [];
   const diy = cardData?.views?.initial?.diy;
-  const stackOptions = cardData?.views?.initial?.stackOptions ?? [];
+  const stack = cardData?.views?.initial?.stack;
+  const quickOptions = stack?.quickOptions ?? [];
+  const stackMin = stack?.min ?? 1;
+  const stackMax = stack?.max ?? STACK_MAX;
   // 当前生效捏捏：DIY 捏捏优先，否则为预设玩具
   const activeToy = customToy ?? toys[toyIndex];
   const currentLevel = matchLevel(power, levels);
-  // 当前生效层数：仅 DIY 捏捏携带层数配置
-  const activeToyLayers = customToy ? selLayers : 1;
 
-  // 同步当前玩具与层数倍率到 ref（供定时器/松手回调读取）
+  // 同步当前玩具到 ref（供定时器/松手回调读取）
   useEffect(() => {
     currentToyRef.current = activeToy ?? null;
   }, [activeToy]);
-
-  useEffect(() => {
-    const option = diy?.layers?.find((layer) => layer.count === selLayers);
-    layerMultiplierRef.current = customToy && option ? option.multiplier : 1;
-  }, [diy, selLayers, customToy]);
 
   /** 播放一次捏压音效（可指定播放速率） */
   const playSqueezeOnce = useCallback((rate: number) => {
@@ -253,26 +374,35 @@ export default function IndexPage() {
     }
   }, []);
 
-  /** 播放捏压音效 + 触觉反馈（档位决定速率；叠捏时逐只连播更脆更密） */
+  /**
+   * 播放捏压音效 + 触觉反馈（真实脆皮节奏）。
+   * 档位决定节奏：轻捏 1 声、用力捏 2 连、捏爆「先脆后闷」双段（间隔约 70ms）。
+   * 叠捏按只数密集连播（间隔 40-90ms、速率缓升封顶 2.2），超过抽样上限按比例抽样。
+   */
   const playSqueezeFeedback = useCallback(
     (level: SqueezeLevel | null) => {
       if (!soundOnRef.current) return;
-      const baseRate = level && level.min >= 70 ? 1.5 : level && level.min >= 35 ? 1.25 : 1.0;
+      const baseRate = level && level.min >= 70 ? 1.7 : level && level.min >= 35 ? 1.35 : 1.05;
+      const playsPerToy = level && level.min >= 35 ? 2 : 1;
+      const burstGapMs = 70; // 捏爆「外壳碎裂 + 爆浆扑哧」双段间隔
       const count = stackCountRef.current;
+      // 抽样：大数量时只播满 SOUND_SAMPLE_MAX 只的密集节奏，避免 100 只音频风暴
+      const playedCount = Math.min(count, SOUND_SAMPLE_MAX);
+      // 数量越大间隔越密（90ms → 40ms），对齐视频里「捏一盘」的密集沙沙声
+      const gap = Math.max(40, STACK_SOUND_GAP_MS - Math.min(50, playedCount * 4));
       soundTimersRef.current.forEach((timer) => clearTimeout(timer));
       soundTimersRef.current = [];
-      if (count <= 1) {
-        playSqueezeOnce(baseRate);
-      } else {
-        // 逐只连播：间隔约 90ms、播放速率逐只递增，叠越多越脆越密
-        for (let i = 0; i < count; i += 1) {
-          const rate = Math.min(2, baseRate * (1 + i * 0.12));
-          if (i === 0) {
-            playSqueezeOnce(rate);
+      for (let i = 0; i < playedCount; i += 1) {
+        const rate = Math.min(2.2, baseRate * (1 + i * 0.08));
+        for (let seg = 0; seg < playsPerToy; seg += 1) {
+          const segRate = seg === 0 ? rate : Math.max(1, rate * 0.55); // 第二段更闷（爆浆扑哧）
+          const at = i * gap + seg * burstGapMs;
+          if (at <= 0) {
+            playSqueezeOnce(segRate);
           } else {
             const timer = setTimeout(() => {
-              playSqueezeOnce(rate);
-            }, i * STACK_SOUND_GAP_MS);
+              playSqueezeOnce(segRate);
+            }, at);
             soundTimersRef.current.push(timer);
           }
         }
@@ -291,7 +421,7 @@ export default function IndexPage() {
   );
 
   /** 真实上报捏压记录（写库语义，仅返回成功标志，不返回渲染字段） */
-  const flushReport = useCallback((levelLabel: string) => {
+  const flushReport = useCallback((levelLabel: string, count: number) => {
     const taro = taroApiRef.current;
     if (!taro) return;
     const amount = pendingReportRef.current;
@@ -304,7 +434,7 @@ export default function IndexPage() {
       data: {
         relief: amount,
         levelLabel,
-        count: 1,
+        count,
       },
     } as never).catch((error: unknown) => {
       console.error("[squishy] report failed", error);
@@ -313,19 +443,19 @@ export default function IndexPage() {
 
   /** 上报一次捏压记录（节流合并，超窗自动补报） */
   const reportSqueeze = useCallback(
-    (level: SqueezeLevel, gain: number) => {
+    (level: SqueezeLevel, gain: number, count: number) => {
       pendingReportRef.current += gain;
       const now = Date.now();
       if (now - lastReportAtRef.current < REPORT_THROTTLE_MS) {
         if (!reportTimerRef.current) {
           reportTimerRef.current = setTimeout(() => {
             reportTimerRef.current = null;
-            flushReport(level.label);
+            flushReport(level.label, stackCountRef.current);
           }, REPORT_THROTTLE_MS);
         }
         return;
       }
-      flushReport(level.label);
+      flushReport(level.label, count);
     },
     [flushReport],
   );
@@ -367,7 +497,7 @@ export default function IndexPage() {
     powerTimerRef.current = setInterval(advancePower, POWER_TICK_MS);
   }, [cardData, cancelBurst]);
 
-  /** 结束按压：保持形变不回弹 + 即时反馈 + 捏爆触发爆裂爆浆 */
+  /** 结束按压：保持形变不回弹 + 即时反馈 + 捏爆触发真实爆浆 */
   const handlePressEnd = useCallback(() => {
     if (!cardData || !pressingRef.current) return;
     if (powerTimerRef.current) {
@@ -381,12 +511,13 @@ export default function IndexPage() {
     powerRef.current = 0;
     const level = matchLevel(finalPower, levels);
     if (level) {
-      // 层数倍率 × 叠捏数量放大本次解压值
-      const gain = Math.round(level.relief * layerMultiplierRef.current * stackCountRef.current);
+      // 叠捏数量放大本次解压值
+      const count = stackCountRef.current;
+      const gain = Math.round(level.relief * count);
       setFeedback({ level, gain });
       playSqueezeFeedback(level);
       reliefRef.current += gain;
-      pressCountRef.current += 1;
+      pressCountRef.current += count;
       setRelief(reliefRef.current);
       setPressCount(pressCountRef.current);
       const rank = levels.findIndex((item) => item.label === level.label);
@@ -394,7 +525,7 @@ export default function IndexPage() {
         bestRankRef.current = rank;
         setBestLabel(level.label);
       }
-      // 捏爆档触发脆皮爆裂 + 爆浆动画
+      // 捏爆档触发外壳崩裂 + 屑屑狂掉 + 爆浆拉丝
       if (level.min >= 70) {
         setBursting(true);
         if (burstTimerRef.current) clearTimeout(burstTimerRef.current);
@@ -405,7 +536,7 @@ export default function IndexPage() {
           }
         }, BURST_MS);
       }
-      reportSqueeze(level, gain);
+      reportSqueeze(level, gain, count);
       if (feedbackTimerRef.current) {
         clearTimeout(feedbackTimerRef.current);
       }
@@ -417,6 +548,44 @@ export default function IndexPage() {
       }, FEEDBACK_MS);
     }
   }, [cardData, levels, playSqueezeFeedback, reportSqueeze]);
+
+  /** 应用叠捏数量（钳制 1-100，越界高亮提示；回显钳制后数值） */
+  const applyStackCount = useCallback(
+    (raw: number) => {
+      const next = Math.min(stackMax, Math.max(stackMin, Math.round(raw) || stackMin));
+      if (raw > stackMax || raw < stackMin) {
+        setStackHint(true);
+        if (stackHintTimerRef.current) clearTimeout(stackHintTimerRef.current);
+        stackHintTimerRef.current = setTimeout(() => {
+          stackHintTimerRef.current = null;
+          if (mountedRef.current) {
+            setStackHint(false);
+          }
+        }, STACK_HINT_MS);
+      }
+      setStackCount(next);
+      setStackInput(String(next));
+    },
+    [stackMin, stackMax],
+  );
+
+  /** 自定义数量输入（Input 文本变化） */
+  const handleStackInput = useCallback(
+    (value: string) => {
+      const parsed = parseInt(value, 10);
+      if (!Number.isFinite(parsed) || value.trim() === "") {
+        // 非数字/清空：不钳制，仅回显原始文本（快捷档点击会重置）
+        setStackInput(value);
+        return;
+      }
+      if (pressingRef.current) {
+        setStackInput(value);
+        return;
+      }
+      applyStackCount(parsed);
+    },
+    [applyStackCount],
+  );
 
   /** 切换玩具 */
   const handleSwitchToy = useCallback(
@@ -451,13 +620,14 @@ export default function IndexPage() {
     setFeedback(null);
   }, [cancelBurst]);
 
-  /** 打开 DIY 弹层（以当前捏捏初始化形状/颜色） */
+  /** 打开 DIY 弹层（以当前捏捏初始化部位） */
   const handleOpenDiy = useCallback(() => {
     if (!diy) return;
     if (!customToy) {
       const toy = toys[toyIndex];
       if (toy) {
         setSelShape(toy.shapeId);
+        setSelEar(toy.earId);
         const matched = diy.colors.find((item) => item.hex === toy.color);
         if (matched) {
           setSelColor(matched.id);
@@ -472,19 +642,39 @@ export default function IndexPage() {
     setDiyOpen(false);
   }, []);
 
-  /** 确认 DIY：应用为当前捏捏 */
+  /** 选中形象预设：一键填充身体/耳朵/配色/内馅 */
+  const handleSelectPreset = useCallback(
+    (presetId: string) => {
+      const preset = diy?.presets.find((item) => item.id === presetId);
+      if (!preset) return;
+      setSelPreset(preset.id);
+      setSelShape(preset.shapeId);
+      setSelEar(preset.earId);
+      const matched = diy?.colors.find((item) => item.hex === preset.color);
+      if (matched) {
+        setSelColor(matched.id);
+      }
+      setSelFilling(preset.fillingId);
+    },
+    [diy],
+  );
+
+  /** 确认 DIY：应用为当前捏捏（拼装形象） */
   const handleConfirmDiy = useCallback(() => {
     if (!diy) return;
     const shape = diy.shapes.find((item) => item.id === selShape) ?? diy.shapes[0];
     const color = diy.colors.find((item) => item.id === selColor) ?? diy.colors[0];
     const filling = diy.fillings.find((item) => item.id === selFilling);
+    const preset = diy.presets.find((item) => item.id === selPreset);
     const toy: SquishyToy = {
       id: "toy-custom",
-      name: diy.customName,
+      name: preset ? preset.name : diy.customName,
       color: color.hex,
       shapeId: shape.id,
-      desc: filling && filling.id !== "none" ? `${filling.name}·${selLayers}层` : `${selLayers}层加厚`,
-      softness: Math.min(1, 0.55 + selLayers * 0.15),
+      earId: selEar,
+      fillingId: selFilling,
+      desc: filling && filling.id !== "none" ? `${filling.name}爆心` : "脆皮Q弹",
+      softness: 0.75,
     };
     setCustomToy(toy);
     setDiyOpen(false);
@@ -499,7 +689,7 @@ export default function IndexPage() {
     setPressing(false);
     setSqueezed(false);
     setFeedback(null);
-  }, [diy, selShape, selColor, selFilling, selLayers, cancelBurst]);
+  }, [diy, selShape, selColor, selEar, selFilling, selPreset, cancelBurst]);
 
   /** 重新拉取卡片数据 */
   const handleRetry = useCallback(() => {
@@ -513,9 +703,9 @@ export default function IndexPage() {
   // DIY 弹层开启时 Footer 不渲染（避免与弹层重叠交互）
   const showFooter = !!cardData && !diyOpen;
 
-  // 形变几何值（JS 计算，动态内联）：按住时随力度压扁；松手后保持凹陷；爆裂时更塌
-  const squishScaleX = bursting ? 1.22 : pressing ? 1 + 0.14 * (power / 100) : squeezed ? 1.06 : 1;
-  const squishScaleY = bursting ? 0.42 : pressing ? 1 - 0.3 * (power / 100) : squeezed ? 0.78 : 1;
+  // 形变几何值（JS 计算，动态内联）：按住时随力度压扁；松手后保持凹陷；爆裂时塌陷外扩压扁
+  const squishScaleX = bursting ? 1.42 : pressing ? 1 + 0.14 * (power / 100) : squeezed ? 1.06 : 1;
+  const squishScaleY = bursting ? 0.3 : pressing ? 1 - 0.3 * (power / 100) : squeezed ? 0.78 : 1;
   const squishScale = `scaleX(${squishScaleX.toFixed(3)}) scaleY(${squishScaleY.toFixed(3)})`;
   // 基础捏痕透明度：按压中随力度加深；松手后保持
   const dentOpacity = pressing ? Math.min(0.9, 0.25 + 0.75 * (power / 100)) : squeezed ? 0.9 : 0;
@@ -526,7 +716,7 @@ export default function IndexPage() {
     const span = index === DENT_STEPS.length - 1 ? 10 : 20;
     return Math.min(1, Math.max(0, (power - step) / span + 0.4));
   });
-  // 裂纹透明度：力度 ≥60% 浮现并随力度上升；捏爆后常驻
+  // 裂纹透明度：力度 ≥60% 浮现并随力度上升；捏爆后常驻（真实爆浆：6 条放射裂缝）
   const crackOpacity = bursting
     ? 0.95
     : pressing
@@ -534,48 +724,69 @@ export default function IndexPage() {
       : squeezed
         ? 0.6
         : 0;
-  // 爆浆内馅芯
-  const activeFilling = diy?.fillings?.find((item) => item.id === selFilling);
-  const fillingVisible = !!customToy && !!activeFilling && activeFilling.id !== "none";
-  const fillingCoreTransform = `translate(-50%, -50%) scale(${bursting ? 1.6 : 1})`;
+  // 爆浆内馅色：当前玩具（预设或 DIY）的内馅决定；无馅捏爆也爆出米白内瓤（真实脆皮都有白瓤）
+  const activeToyFillingId = activeToy?.fillingId ?? "none";
+  const activeFilling = diy?.fillings?.find((item) => item.id === activeToyFillingId);
+  // 爆浆色：有馅用馅色，无馅用米白内瓤色
+  const burstJamColor =
+    activeFilling && activeFilling.id !== "none" ? activeFilling.hex : "#fff7ec";
+  // 内馅芯可见：DIY 捏捏有馅时常驻展示；预设玩具与无馅捏捏在爆裂时展示内瓤
+  const fillingVisible = !!activeFilling && activeFilling.id !== "none";
+  const fillingCoreTransform = `translate(-50%, -50%) scale(${bursting ? 1.8 : 1})`;
   const fillingCoreOpacity = bursting ? 0.95 : pressing ? 0.72 : squeezed ? 0.8 : 0.55;
-  // 层数色环（层数 - 1 个，由外向内）
-  const layerRingOpacities = activeToyLayers >= 2 ? RING_OPACITIES.slice(0, activeToyLayers - 1) : [];
 
-  // 叠捏堆叠：渲染 stackCount 个捏捏（同配置同色，错位堆叠）
-  const stackList = Array.from({ length: stackCount }, (_, index) => index);
-  const frontIndex = Math.floor((stackCount - 1) / 2);
-  // 爆裂碎片编号（捏爆瞬时动画）
-  const fragmentIds = bursting ? [0, 1, 2, 3, 4, 5] : [];
-  // 爆浆滴落编号（有馅捏爆时）：3 下坠 + 2 左右飞溅
-  const jamDropIds = bursting && fillingVisible ? [0, 1, 2, 3, 4] : [];
+  // 叠捏堆叠：蜂窝密堆布局 + 数量反比尺寸；百分比点换算容器 px 偏移（相对容器而非球体自身）
+  const stackList = stackLayout(stackCount);
+  const ballWidthPct = stackBallWidth(stackCount);
+  const isMultiStack = stackCount > 1;
+  // 真实爆浆冲击序：白闪（0-220ms）→ 冲击波扩散环（0-550ms）→ 碎片从边缘炸出（6 大块 + 6 细屑）
+  // → 浆帽喷涌 + 浆滴挂壁拉丝（0-1.3s，无馅用米白内瓤色）→ 浆点四溅（0-0.6s）→ 顶部破口翻皮
+  const burstFlash = bursting;
+  const burstWave = bursting;
+  const burstCap = bursting;
+  // 飞溅浆点编号：8 颗小瓤点向四周迸溅
+  const jamSpatterIds = bursting ? [0, 1, 2, 3, 4, 5, 6, 7] : [];
+  // 破口翻皮编号：顶部裂口左右两片翘皮
+  const peelIds = bursting ? [0, 1] : [];
+  // 爆裂碎片编号（真实脆皮：6 大块 + 6 细屑 = 12 块，从球缘炸出）
+  const fragmentIds = bursting ? [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] : [];
+  // 爆浆滴落编号（捏爆时，无馅用米白内瓤）：5 滴挂壁下坠 + 4 滴斜飞迸溅 + 4 滴边缘溢流
+  const jamDropIds = bursting ? [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] : [];
 
-  /** 渲染单只捏捏（形状 + 凹陷 + 裂纹 + 内馅 + 层环） */
+  /** 渲染单只捏捏（身体 + 耳朵 + 凹陷 + 裂纹 + 内馅） */
   const renderSquishy = (index: number) => {
-    const offset = stackOffset(index, stackCount);
+    const point = stackList[index] ?? { x: 0, y: 0 };
     const shapeId = activeToy?.shapeId ?? "round";
     const toyColor = activeToy?.color ?? "#ffe6d8";
+    const earId = activeToy?.earId ?? "none";
     const isHeart = shapeId === "heart";
+    // 堆叠球宽度必须显式给值（Lynx 无 auto 收缩）：统一百分比宽度
+    const widthStyle = `width: ${ballWidthPct}%;`;
     // 首只在文档流中定位，其余绝对定位叠放
     const posPrefix = index === 0 ? "" : "translate(-50%, -50%) ";
+    // 容器 px 偏移：百分比布局点 × 实测容器尺寸（未量得前用 300px 兜底，量得后自动展开）
+    const containerW = stackSize?.w ?? 300;
+    const containerH = stackSize?.h ?? 240;
     const offsetTranslate =
-      offset.x === 0 && offset.y === 0
+      point.x === 0 && point.y === 0
         ? ""
-        : `translate(${offset.x.toFixed(1)}px, ${offset.y.toFixed(1)}px) `;
+        : `translate(${((point.x / 100) * containerW).toFixed(1)}px, ${((point.y / 100) * containerH).toFixed(1)}px) `;
     const ballStyle = isHeart
       ? `transform: ${posPrefix}${offsetTranslate}${squishScale};`
       : `background-color: ${toyColor}; transform: ${posPrefix}${offsetTranslate}${squishScale};`;
     return (
       <View
         key={`squishy-${index}`}
-        className={`squishy-ball squishy-shape-${shapeId}${index === frontIndex ? " is-front" : ""}${
-          index === 0 ? "" : " is-stacked"
+        className={`squishy-ball squishy-shape-${shapeId}${index === 0 ? " is-base" : " is-stacked"}${
+          stackCount > 3 ? " is-dense" : ""
         }`}
-        style={ballStyle}
+        style={`${widthStyle}${ballStyle}`}
         onTouchStart={handlePressStart}
         onTouchEnd={handlePressEnd}
         onTouchCancel={handlePressEnd}
       >
+        {/* 耳朵/头顶装饰（结构件，叠在身体上方） */}
+        {renderEarParts(earId, toyColor, `ball-${index}`)}
         {/* 爱心由三片结构件组成（其余形状为容器本体） */}
         {isHeart ? renderHeartParts(toyColor, `ball-${index}`) : null}
         <View className="squishy-highlight" />
@@ -592,28 +803,21 @@ export default function IndexPage() {
           className="squishy-dent squishy-dent-4"
           style={`opacity: ${stepOpacities[2].toFixed(2)};`}
         />
-        {/* 层数嵌套色环（≥2 层） */}
-        {layerRingOpacities.map((ringOpacity, ringIndex) => (
-          <View
-            key={`ring-${index}-${ringIndex}`}
-            className={`squishy-layer-ring${ringIndex === 1 ? " squishy-layer-ring-2" : ""}${
-              ringIndex === 2 ? " squishy-layer-ring-3" : ""
-            }`}
-            style={`opacity: ${ringOpacity.toFixed(2)};`}
-          />
-        ))}
         {/* 爆浆内馅芯（有馅时） */}
         {fillingVisible ? (
           <View
             className="squishy-filling-core"
-            style={`background-color: ${activeFilling?.hex ?? "#ff6b81"}; transform: ${fillingCoreTransform}; opacity: ${fillingCoreOpacity.toFixed(2)};`}
+            style={`background-color: ${burstJamColor}; transform: ${fillingCoreTransform}; opacity: ${fillingCoreOpacity.toFixed(2)};`}
           />
         ) : null}
-        {/* 脆皮裂纹（≥60% 力度浮现，捏爆后常驻） */}
+        {/* 脆皮裂纹（≥60% 力度浮现，捏爆后常驻；6 条放射裂缝） */}
         <View className="squishy-crack-wrap" style={`opacity: ${crackOpacity.toFixed(2)};`}>
           <View className="squishy-crack squishy-crack-1" />
           <View className="squishy-crack squishy-crack-2" />
           <View className="squishy-crack squishy-crack-3" />
+          <View className="squishy-crack squishy-crack-4" />
+          <View className="squishy-crack squishy-crack-5" />
+          <View className="squishy-crack squishy-crack-6" />
         </View>
       </View>
     );
@@ -621,11 +825,10 @@ export default function IndexPage() {
 
   // DIY 弹层预览数据
   const previewShape = selShape;
-  const previewColor = diy?.colors?.find((item) => item.id === selColor)?.hex ?? "#ffd3d8";
+  const previewColor = diy?.colors?.find((item) => item.id === selColor)?.hex ?? "#ffb3c1";
+  const previewEar = selEar;
   const previewFilling = diy?.fillings?.find((item) => item.id === selFilling);
   const previewFillingVisible = !!previewFilling && previewFilling.id !== "none";
-  const previewRingOpacities =
-    selLayers >= 2 ? RING_OPACITIES.slice(0, selLayers - 1) : [];
 
   return (
     <View className="widget-root">
@@ -651,16 +854,43 @@ export default function IndexPage() {
                 <Text className="squishy-relief">{`解压值 ${relief}`}</Text>
               </View>
 
-              {/* 捏捏主体区 + 右侧叠捏数量按钮 */}
+              {/* 捏捏主体区 + 右侧叠捏数量 */}
               <View
                 className={`squishy-playzone${pressing ? " is-pressing" : ""}${
                   squeezed ? " is-squeezed" : ""
                 }`}
               >
                 <View className="squishy-shadow" />
-                <View className={`squishy-stack${stackCount > 1 ? " is-multi" : ""}`}>
-                  {stackList.map((index) => renderSquishy(index))}
-                  {/* 脆皮爆裂碎片（捏爆瞬时动画） */}
+                <View className={`squishy-stack${isMultiStack ? " is-multi" : ""}`}>
+                  {stackList.map((_, index) => renderSquishy(index))}
+                  {/* 爆浆白闪：捏爆瞬间中心高光一闪（最底层） */}
+                  {burstFlash ? <View className="squishy-burst-flash" /> : null}
+                  {/* 爆浆冲击波：从球心向外扩散的脆皮震动环 */}
+                  {burstWave ? <View className="squishy-burst-wave" /> : null}
+                  {/* 有馅时浆帽：爆浆中心喷涌鼓包（盖在球上，无馅用米白内瓤） */}
+                  {burstCap ? (
+                    <View
+                      className="squishy-burst-cap"
+                      style={`background-color: ${burstJamColor};`}
+                    />
+                  ) : null}
+                  {/* 顶部破口翻皮：裂口两片脆皮翘起（颜色随玩具主体） */}
+                  {peelIds.map((id) => (
+                    <View
+                      key={`peel-${id}`}
+                      className={`squishy-peel squishy-peel-${id}`}
+                      style={`background-color: ${activeToy?.color ?? "#ffe6d8"};`}
+                    />
+                  ))}
+                  {/* 飞溅浆点：8 颗小瓤点向四周迸溅（无馅用米白内瓤） */}
+                  {jamSpatterIds.map((id) => (
+                    <View
+                      key={`spat-${id}`}
+                      className={`squishy-spat squishy-spat-${id}`}
+                      style={`background-color: ${burstJamColor};`}
+                    />
+                  ))}
+                  {/* 脆皮爆裂碎片：6 大块 + 6 细屑（从球缘炸出，颜色由 TSX 内联提供） */}
                   {fragmentIds.map((id) => (
                     <View
                       key={`frag-${id}`}
@@ -668,18 +898,18 @@ export default function IndexPage() {
                       style={`background-color: ${activeToy?.color ?? "#ffe6d8"};`}
                     />
                   ))}
-                  {/* 爆浆滴落（有馅捏爆时） */}
+                  {/* 爆浆滴落：4 滴斜飞迸溅 + 5 滴挂壁下坠拉丝（无馅用米白内瓤） */}
                   {jamDropIds.map((id) => (
                     <View
                       key={`jam-${id}`}
                       className={`squishy-jam squishy-jam-${id}`}
-                      style={`background-color: ${activeFilling?.hex ?? "#ff6b81"};`}
+                      style={`background-color: ${burstJamColor};`}
                     />
                   ))}
                 </View>
-                {/* 右侧叠捏数量按钮 */}
+                {/* 右侧叠捏数量：快捷档 + 自定义输入 */}
                 <View className="squishy-stack-picker">
-                  {stackOptions.map((option) => (
+                  {quickOptions.map((option) => (
                     <View
                       key={`stack-${option.count}`}
                       className={`squishy-stack-btn${
@@ -687,13 +917,25 @@ export default function IndexPage() {
                       }`}
                       onClick={() => {
                         if (!pressingRef.current) {
-                          setStackCount(option.count);
+                          applyStackCount(option.count);
                         }
                       }}
                     >
                       <Text className="squishy-stack-btn-text">{option.label}</Text>
                     </View>
                   ))}
+                  <View className={`squishy-stack-input${stackHint ? " is-hint" : ""}`}>
+                    <Text className="squishy-stack-input-label">{stack?.customLabel ?? "自定义"}</Text>
+                    <Input
+                      className="squishy-stack-input-field"
+                      type="number"
+                      value={stackInput}
+                      maxlength={3}
+                      onInput={(e) => {
+                        handleStackInput(String(e.detail.value ?? ""));
+                      }}
+                    />
+                  </View>
                 </View>
                 {pressing && currentLevel ? (
                   <View className="squishy-powerbar">
@@ -716,7 +958,7 @@ export default function IndexPage() {
               </View>
             </View>
 
-            {/* DIY 制作弹层（覆盖主玩区，Footer 同步隐藏） */}
+            {/* DIY 拼装形象工坊（覆盖主玩区，Footer 同步隐藏） */}
             {diyOpen && diy ? (
               <View className="squishy-diy-overlay">
                 <View className="squishy-diy-panel">
@@ -727,7 +969,7 @@ export default function IndexPage() {
                     </View>
                   </View>
                   <View className="squishy-diy-main">
-                    {/* 实时预览 */}
+                    {/* 实时拼装预览 */}
                     <View className="squishy-diy-preview-wrap">
                       <View
                         className={`squishy-diy-preview squishy-shape-${previewShape}`}
@@ -737,6 +979,7 @@ export default function IndexPage() {
                             : `background-color: ${previewColor};`
                         }
                       >
+                        {renderEarParts(previewEar, previewColor, "preview")}
                         {previewShape === "heart"
                           ? renderHeartParts(previewColor, "preview")
                           : null}
@@ -746,19 +989,34 @@ export default function IndexPage() {
                             style={`background-color: ${previewFilling?.hex}; transform: translate(-50%, -50%); opacity: 0.55;`}
                           />
                         ) : null}
-                        {previewRingOpacities.map((ringOpacity, ringIndex) => (
-                          <View
-                            key={`preview-ring-${ringIndex}`}
-                            className={`squishy-layer-ring${
-                              ringIndex === 1 ? " squishy-layer-ring-2" : ""
-                            }${ringIndex === 2 ? " squishy-layer-ring-3" : ""}`}
-                            style={`opacity: ${ringOpacity.toFixed(2)};`}
-                          />
-                        ))}
                       </View>
                     </View>
-                    {/* 配置行 */}
+                    {/* 配置行区 */}
                     <View className="squishy-diy-rows">
+                      {/* 形象预设行 */}
+                      <View className="squishy-diy-row">
+                        <Text className="squishy-diy-row-label">{diy.presetLabel}</Text>
+                        <View className="squishy-diy-options">
+                          {diy.presets.map((preset) => (
+                            <View
+                              key={`preset-${preset.id}`}
+                              className={`squishy-diy-option squishy-diy-preset${
+                                selPreset === preset.id ? " is-active" : ""
+                              }`}
+                              onClick={() => {
+                                handleSelectPreset(preset.id);
+                              }}
+                            >
+                              <View
+                                className="squishy-diy-preset-dot"
+                                style={`background-color: ${preset.color};`}
+                              />
+                              <Text className="squishy-diy-option-text">{preset.name}</Text>
+                            </View>
+                          ))}
+                        </View>
+                      </View>
+                      {/* 身体行 */}
                       <View className="squishy-diy-row">
                         <Text className="squishy-diy-row-label">{diy.shapeLabel}</Text>
                         <View className="squishy-diy-options">
@@ -770,6 +1028,7 @@ export default function IndexPage() {
                               }`}
                               onClick={() => {
                                 setSelShape(shape.id);
+                                setSelPreset("");
                               }}
                             >
                               {shape.id === "heart" ? (
@@ -786,6 +1045,28 @@ export default function IndexPage() {
                           ))}
                         </View>
                       </View>
+                      {/* 耳朵行 */}
+                      <View className="squishy-diy-row">
+                        <Text className="squishy-diy-row-label">{diy.earLabel}</Text>
+                        <View className="squishy-diy-options">
+                          {diy.ears.map((ear) => (
+                            <View
+                              key={`ear-${ear.id}`}
+                              className={`squishy-diy-option${
+                                selEar === ear.id ? " is-active" : ""
+                              }`}
+                              onClick={() => {
+                                setSelEar(ear.id);
+                                setSelPreset("");
+                              }}
+                            >
+                              <View className={`squishy-diy-ear-icon squishy-ear-icon-${ear.id}`} />
+                              <Text className="squishy-diy-option-text">{ear.name}</Text>
+                            </View>
+                          ))}
+                        </View>
+                      </View>
+                      {/* 配色行 */}
                       <View className="squishy-diy-row">
                         <Text className="squishy-diy-row-label">{diy.colorLabel}</Text>
                         <View className="squishy-diy-options">
@@ -797,6 +1078,7 @@ export default function IndexPage() {
                               }`}
                               onClick={() => {
                                 setSelColor(color.id);
+                                setSelPreset("");
                               }}
                             >
                               <View
@@ -807,6 +1089,7 @@ export default function IndexPage() {
                           ))}
                         </View>
                       </View>
+                      {/* 内馅行 */}
                       <View className="squishy-diy-row">
                         <Text className="squishy-diy-row-label">{diy.fillingLabel}</Text>
                         <View className="squishy-diy-options">
@@ -818,6 +1101,7 @@ export default function IndexPage() {
                               }`}
                               onClick={() => {
                                 setSelFilling(filling.id);
+                                setSelPreset("");
                               }}
                             >
                               <View
@@ -829,25 +1113,6 @@ export default function IndexPage() {
                                 }
                               />
                               <Text className="squishy-diy-option-text">{filling.name}</Text>
-                            </View>
-                          ))}
-                        </View>
-                      </View>
-                      <View className="squishy-diy-row">
-                        <Text className="squishy-diy-row-label">{diy.layerLabel}</Text>
-                        <View className="squishy-diy-options">
-                          {diy.layers.map((layer) => (
-                            <View
-                              key={`layer-${layer.count}`}
-                              className={`squishy-diy-option squishy-diy-layer${
-                                selLayers === layer.count ? " is-active" : ""
-                              }`}
-                              onClick={() => {
-                                setSelLayers(layer.count);
-                              }}
-                            >
-                              <Text className="squishy-diy-layer-count">{layer.label}</Text>
-                              <Text className="squishy-diy-option-text">{`解压×${layer.multiplier}`}</Text>
                             </View>
                           ))}
                         </View>
