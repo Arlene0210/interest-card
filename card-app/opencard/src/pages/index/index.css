@@ -1,0 +1,451 @@
+.widget-root {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 3.2vh 4.3vw;
+  background: var(--widget-bg);
+  border: 1px solid var(--widget-border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.widget-header,
+.widget-footer {
+  display: flex;
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: auto;
+}
+
+.widget-header {
+  flex-direction: column;
+  width: 100%;
+  margin-bottom: 3.7vh;
+}
+
+.widget-body {
+  box-sizing: border-box;
+  display: flex;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+}
+
+.widget-footer {
+  box-sizing: border-box;
+  flex-direction: column;
+  width: 100%;
+  padding-top: 3.7vh;
+}
+
+.widget-footer .widget-primary-cta {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 10vh;
+  height: 10vh;
+  padding: 0 4.3vw;
+  background: var(--cta-bg, var(--text-primary));
+  border-radius: var(--radius-xl);
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: 10vh;
+}
+
+.widget-primary-cta .widget-primary-cta-text {
+  color: var(--cta-fg, var(--text-inverse));
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.375rem;
+}
+
+.widget-adaptive {
+  display: flex;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 0;
+}
+
+.widget-state-message {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.5rem;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* ===================== 捏捏乐业务样式 ===================== */
+
+.squishy-inner {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-height: 0;
+  gap: 2.2vh;
+}
+
+/* 顶部提示行 + 解压值 */
+.squishy-topbar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: auto;
+}
+
+.squishy-hint {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.0625rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-width: 0;
+}
+
+.squishy-relief {
+  color: #ff8fab;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.125rem;
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: auto;
+  margin-left: 1.5vw;
+}
+
+/* 主体玩区 */
+.squishy-playzone {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-height: 0;
+}
+
+/* 玩具投影（柔和径向渐变，无 filter） */
+.squishy-shadow {
+  position: absolute;
+  bottom: 6%;
+  left: 50%;
+  width: 46%;
+  height: 3.5vh;
+  margin-left: -23%;
+  border-radius: 999px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(22, 24, 35, 0.22) 0%,
+    rgba(22, 24, 35, 0) 70%
+  );
+}
+
+/* 捏捏球主体：多层渐变拟物（颜色与形变由 TSX 内联提供） */
+.squishy-ball {
+  position: relative;
+  width: 40%;
+  aspect-ratio: 1 / 1;
+  max-height: 34vh;
+  border-radius: 50%;
+  background-image: radial-gradient(
+      circle at 32% 28%,
+      rgba(255, 255, 255, 0.85) 0%,
+      rgba(255, 255, 255, 0) 42%
+    ),
+    radial-gradient(circle at 68% 72%, rgba(0, 0, 0, 0.06) 0%, rgba(0, 0, 0, 0) 55%);
+  box-shadow:
+    inset 0 -2.2vh 3.5vh rgba(160, 120, 100, 0.22),
+    inset 0 1vh 1.8vh rgba(255, 255, 255, 0.6),
+    0 1.2vh 2.4vh rgba(22, 24, 35, 0.16);
+  transition: transform 0.12s ease-out;
+}
+
+/* 高光（柔和白斑，无 filter） */
+.squishy-highlight {
+  position: absolute;
+  top: 14%;
+  left: 18%;
+  width: 26%;
+  aspect-ratio: 4 / 3;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 255, 255, 0.65) 0%,
+    rgba(255, 255, 255, 0) 70%
+  );
+}
+
+/* 捏痕（两处手指凹陷，透明度由 TSX 内联控制） */
+.squishy-dent {
+  position: absolute;
+  bottom: 24%;
+  left: 30%;
+  width: 20%;
+  height: 14%;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(150, 110, 95, 0.3) 0%,
+    rgba(150, 110, 95, 0) 72%
+  );
+}
+
+.squishy-dent-2 {
+  left: auto;
+  right: 28%;
+  bottom: 32%;
+  width: 16%;
+  height: 11%;
+}
+
+/* 力度条 */
+.squishy-powerbar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 62%;
+  height: 2.6vh;
+  margin-top: 1.8vh;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  overflow: hidden;
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: auto;
+}
+
+.squishy-powerbar-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ffd36e 0%, #ff8fab 60%, #ff5f8f 100%);
+}
+
+.squishy-powerbar-label {
+  position: relative;
+  width: 100%;
+  text-align: center;
+  color: rgba(22, 24, 35, 0.9);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.0625rem;
+}
+
+/* 松手反馈气泡 */
+.squishy-feedback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 1.4vh;
+  animation: squishyPop 0.25s ease-out;
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: auto;
+}
+
+.squishy-feedback-ono {
+  color: #fff0c6;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.75rem;
+  text-shadow: 0 1px 0 rgba(22, 24, 35, 0.25);
+}
+
+.squishy-feedback-text {
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.125rem;
+  margin-top: 0.4vh;
+}
+
+@keyframes squishyPop {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* 统计行 */
+.squishy-stats {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: 4vw;
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: auto;
+}
+
+.squishy-stat {
+  color: var(--text-tertiary);
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.0625rem;
+}
+
+/* 加载失败态 */
+.squishy-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2vh;
+}
+
+.squishy-retry {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26vw;
+  min-height: 5.4vh;
+  padding: 0 4vw;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.squishy-retry-text {
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+}
+
+/* ===================== Footer ===================== */
+
+.squishy-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.6vh;
+}
+
+/* 玩具切换行 */
+.squishy-toys {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: 3.4vw;
+}
+
+.squishy-toy-dot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 5.6vh;
+  height: 5.6vh;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.squishy-toy-dot.is-active {
+  border: 1px solid rgba(255, 143, 171, 0.9);
+  background: rgba(255, 143, 171, 0.14);
+}
+
+.squishy-toy-dot-inner {
+  width: 60%;
+  height: 60%;
+  border-radius: 50%;
+}
+
+/* 音效开关 */
+.squishy-sound-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 5.6vh;
+  padding: 0 2.6vw;
+  margin-left: 2vw;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.squishy-sound-toggle.is-on {
+  border: 1px solid rgba(255, 211, 110, 0.9);
+  background: rgba(255, 211, 110, 0.14);
+}
+
+.squishy-sound-text {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.0625rem;
+}
+
+/* 换新按钮 */
+.squishy-renew {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 10vh;
+  height: 10vh;
+  padding: 0 4.3vw;
+  border-radius: var(--radius-xl);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: 10vh;
+}
+
+.squishy-renew.is-ready {
+  background: #ff8fab;
+  border: 1px solid #ff8fab;
+}
+
+.squishy-renew.is-ready .squishy-renew-text {
+  color: #31141d;
+  font-weight: 600;
+}
+
+.squishy-renew-text {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.375rem;
+}

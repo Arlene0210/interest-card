@@ -1,0 +1,21 @@
+{
+  "AppID": "tt58682ed5c614cd1901",
+  "CardAppID": "ttb852ceef262e2d2d22",
+  "PlanName": "解压捏捏乐 - 轻量解压小游戏投放计划",
+  "TemplateType": 5,
+  "TemplateStyleType": 6,
+  "DataFetchMode": "dynamic",
+  "CardBackgroundUrl": "https://lf-aihub.douyinpic.com/obj/developer/card_7706443532244896531_ext/772b3355fc3e.png",
+  "BgMusicUrl": "https://lf-aihub.douyinvod.com/obj/developer/card_7706443532244896531_ext/60de47fd4b88.mp3",
+  "Button": "查看解压报告",
+  "RecommendReasonPrefix": "长按捏瘪",
+  "RecommendReasonSuffix": "解压捏捏乐",
+  "PrimaryColor": "#6e4b2b",
+  "ContentInfoList": [
+    {
+      "PageIndex": "pages/index/index",
+      "PageURL": "https://m.zjbyte.net/share/douyin/?token=RjZENTNBOTc1REI1NzZqdHB2bDYy&share_channel=copy"
+    }
+  ],
+  "__timestamp": 1794308320013
+}
