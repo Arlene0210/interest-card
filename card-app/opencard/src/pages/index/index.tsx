@@ -22,8 +22,8 @@ const FEEDBACK_MS = 1600;
 const REPORT_THROTTLE_MS = 1200;
 /** 叠捏连播音效基础间隔（ms，数量越大越密） */
 const STACK_SOUND_GAP_MS = 55;
-/** 爆裂动画总时长（ms）：碎片飞溅 0.85s + 浆液挂壁拉丝 1.3s */
-const BURST_MS = 1400;
+/** 爆裂动画总时长（ms）：蜡皮碎裂飞散 0-0.95s → 馅料爆浆 0.32-1.45s（先见碎裂再见爆浆的两段时序） */
+const BURST_MS = 1500;
 /** 数量输入上限 */
 const STACK_MAX = 100;
 /** 音效连播抽样上限（超过该数量按比例抽样播放） */
@@ -109,10 +109,10 @@ function stackLayout(
   return points;
 }
 
-/** 单只捏捏尺寸（%）：宽度相对容器宽，高度相对容器高（侧视压扁椭圆）；数量越多单只越小 */
+/** 单只捏捏尺寸（%）：数量 1 为正视图大球（完整展示形象），>1 为侧视压扁椭圆垂直堆叠 */
 function stackBallSize(count: number): { widthPct: number; heightRatio: number } {
-  // heightRatio：侧视椭圆高度 = 宽度 px × ratio（单只保持近圆，堆叠压扁）
-  if (count <= 1) return { widthPct: 36, heightRatio: 1 };
+  // heightRatio：高度 = 宽度 px × ratio（1 = 正视图近圆；<1 = 侧视压扁）
+  if (count <= 1) return { widthPct: 52, heightRatio: 1 };
   if (count <= 3) return { widthPct: 34, heightRatio: 0.62 };
   if (count <= 10) return { widthPct: 30, heightRatio: 0.58 };
   if (count <= 25) return { widthPct: 25, heightRatio: 0.52 };
@@ -774,12 +774,21 @@ export default function IndexPage() {
   // DIY 弹层开启时 Footer 不渲染（避免与弹层重叠交互）
   const showFooter = !!cardData && !diyOpen;
 
-  // 形变几何值（JS 计算，动态内联）：按住时随力度压扁；松手后保持凹陷；爆裂中塌陷外扩；爆后残体保持破相（饱满偏歪）
-  const squishScaleX = bursting ? 1.42 : burstShaped ? 1.12 : pressing ? 1 + 0.14 * (power / 100) : squeezed ? 1.06 : 1;
-  const squishScaleY = bursting
-    ? 0.3
+  // 形变几何值（JS 计算，动态内联）：按住时随力度压扁；松手后保持凹陷；
+  // 捏爆 = 塌陷随爆浆单调加深（0.7 → 0.46 → 0.42，一次塌到位绝不向上回弹）；残体保持破相
+  const squishScaleX = bursting
+    ? 1.26
     : burstShaped
-      ? 0.66
+      ? 1.3
+      : pressing
+        ? 1 + 0.14 * (power / 100)
+        : squeezed
+          ? 1.06
+          : 1;
+  const squishScaleY = bursting
+    ? 0.46
+    : burstShaped
+      ? 0.42
       : pressing
         ? 1 - 0.3 * (power / 100)
         : squeezed
@@ -809,18 +818,16 @@ export default function IndexPage() {
   // 爆浆色：有馅用馅色，无馅用米白内瓤色
   const burstJamColor =
     activeFilling && activeFilling.id !== "none" ? activeFilling.hex : "#fff7ec";
-  // 内馅芯：捏爆时涌出放大 2.2；爆后残体常驻露出并偏心挤出（蜡皮破了馅向破口侧堆）；平时有馅玩具淡显
-  const fillingVisible = !!activeFilling && activeFilling.id !== "none";
-  const fillingCoreTransform = `translate(-50%, -50%) scale(${bursting ? 2.2 : burstShaped ? 1.4 : 1}) translate(${burstShaped ? "6%, -10%" : "0, 0"})`;
-  const fillingCoreOpacity = bursting
-    ? 0.95
-    : burstShaped
-      ? 0.88
-      : pressing
-        ? 0.72
-        : squeezed
-          ? 0.8
-          : 0.55;
+  // 内馅芯：常驻渲染但捏爆前完全透明（蜡皮未破不露馅），捏爆时 0.32s 延迟后从裂口涌出（先见碎裂再见爆浆）
+  // 爆浆形态：不规则 ooze 圆角，scale 1.55 只铺到破口区域（保留大片蜡皮残边，避免馅色铺满整球）；残体态收拢为 1.35 常驻露出
+  const fillingCoreTransform = `translate(-50%, -50%) scale(${bursting ? 1.55 : burstShaped ? 1.35 : 1}) translate(${bursting || burstShaped ? "5%, -8%" : "0, 0"})`;
+  const fillingCoreOpacity = bursting ? 0.9 : burstShaped ? 0.85 : 0;
+  const fillingCoreRadius =
+    bursting || burstShaped ? "58% 42% 55% 45% / 55% 62% 38% 45%" : "50%";
+  // 延迟只在捏爆进入时生效（先碎裂后爆浆）；离开爆裂态立即平滑收场
+  const fillingCoreTransition = bursting
+    ? "transition: transform 0.38s cubic-bezier(0.55, 0, 0.85, 0.4) 0.32s, opacity 0.24s ease-out 0.32s;"
+    : "transition: transform 0.3s ease-out, opacity 0.25s ease-out;";
 
   // 叠捏堆叠：侧视垂直堆叠成塔（底部对齐、整体居中）；单只尺寸按数量收缩
   const containerW = stackSize?.w ?? 300;
@@ -835,14 +842,12 @@ export default function IndexPage() {
   // 捏爆变形圆角（不对称，蜡皮局部塌陷鼓包）：爆裂中偏规则崩裂，残体态更歪扭不对称
   const burstRadius = "52% 48% 55% 45% / 62% 38% 58% 42%";
   const remnantRadius = "64% 40% 58% 44% / 48% 70% 36% 66%";
-  // 真实爆浆冲击序：白闪（0-220ms）→ 冲击波扩散环（0-550ms）→ 蜡皮碎片从边缘炸出（6 大块 + 6 细屑 + 3 掉屑）
-  // → 浆帽喷涌 + 浆滴挂壁拉丝（0-1.3s，无馅用米白内瓤色）→ 浆点四溅（0-0.6s）→ 顶部破口翻皮
+  // 真实爆浆时序（先碎裂后爆浆）：白闪（0-160ms）→ 冲击波（0-550ms）→ 蜡皮碎片炸出（0-1.05s 主体）
+  // → 内馅爆出 + 浆帽 + 浆滴拉丝（0.32s 起）→ 顶部破口翻皮；爆裂元素锚定塔中心（容器中心）
   const burstFlash = bursting;
   const burstWave = bursting;
   const burstCap = bursting;
-  // 飞溅浆点编号：8 颗小瓤点向四周迸溅
   const jamSpatterIds = bursting ? [0, 1, 2, 3, 4, 5, 6, 7] : [];
-  // 破口翻皮编号：顶部裂口左右两片翘皮
   const peelIds = bursting ? [0, 1] : [];
   // 蜡皮碎片编号（6 大块 + 6 细屑 = 12 块，从球缘炸出；颜色为蜡皮色）
   const fragmentIds = bursting ? [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] : [];
@@ -886,7 +891,7 @@ export default function IndexPage() {
         key={`squishy-${index}`}
         className={`squishy-ball squishy-shape-${shapeId}${index === 0 ? " is-base" : " is-stacked"}${
           stackCount > 3 ? " is-dense" : ""
-        }`}
+        }${bursting ? " is-bursting" : ""}${burstShaped ? " is-remnant" : ""}`}
         style={`${widthStyle}${ballStyle}`}
         onTouchStart={handlePressStart}
         onTouchEnd={handlePressEnd}
@@ -915,13 +920,11 @@ export default function IndexPage() {
           className="squishy-dent squishy-dent-4"
           style={`opacity: ${stepOpacities[2].toFixed(2)};`}
         />
-        {/* 内馅芯：捏爆时从蜡皮裂口涌出（burstShaped 后常驻露出） */}
-        {fillingVisible || bursting || burstShaped ? (
-          <View
-            className="squishy-filling-core"
-            style={`background-color: ${burstJamColor}; transform: ${fillingCoreTransform}; opacity: ${fillingCoreOpacity.toFixed(2)};`}
-          />
-        ) : null}
+        {/* 内馅芯：常驻挂载但捏爆前全透明，捏爆 0.32s 后从裂口涌出（过渡才能从透明渐显） */}
+        <View
+          className="squishy-filling-core"
+          style={`background-color: ${burstJamColor}; transform: ${fillingCoreTransform}; opacity: ${fillingCoreOpacity.toFixed(2)}; border-radius: ${fillingCoreRadius}; ${fillingCoreTransition}`}
+        />
         {/* 爆后残体主裂口：蜡皮破口常驻（不对称裂口边 + 偏侧塌陷），burstShaped 时渲染 */}
         {burstShaped ? (
           <View className="squishy-remnant-cleft">
