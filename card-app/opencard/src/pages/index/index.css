@@ -1657,7 +1657,8 @@
   }
 }
 
-/* 爆浆滴落（捏爆时，颜色由 TSX 内联提供）：挂壁粘丝带 + 下坠滴头（起点贴塌陷球面） */
+/* 爆浆滴落（捏爆时，颜色由 TSX 内联提供）：圆润滴头 + 短尾自然下坠（起点贴塌陷球面）
+   下坠全程保持圆润比例，只在脱离瞬间轻微拉伸，不再拉成细长条 */
 .squishy-jam {
   position: absolute;
   left: 50%;
@@ -1689,9 +1690,11 @@
   animation-delay: 0.4s;
 }
 
-/* 追加下坠拉丝大滴（3-4）：更慢、更长、拉丝感更强 */
+/* 追加下坠滴（3-4）：更慢的大滴，圆润下坠 */
 .squishy-jam-3 {
   margin-left: -8px;
+  width: 18px;
+  height: 21px;
   animation-duration: 1.35s;
   animation-delay: 0.36s;
 }
@@ -1780,22 +1783,22 @@
   animation-fill-mode: both;
 }
 
-/* 边缘溢流：从帽沿越线滑落到球缘外 */
+/* 边缘溢流：从帽沿越线滑落到球缘外（圆润滴头下滑，轻微形变不拉条） */
 @keyframes squishyJamEdgeL {
   0% {
     transform: translate(0, 0) scale(0.5, 0.6);
     opacity: 0;
   }
   15% {
-    transform: translate(-6px, 2px) scale(0.9, 1.15);
+    transform: translate(-6px, 2px) scale(0.9, 1.05);
     opacity: 0.95;
   }
   60% {
-    transform: translate(-14px, 34px) scale(0.6, 1.9);
+    transform: translate(-14px, 34px) scale(0.72, 1.24);
     opacity: 0.75;
   }
   100% {
-    transform: translate(-18px, 62px) scale(0.85, 1.1);
+    transform: translate(-18px, 62px) scale(0.82, 1.02);
     opacity: 0;
   }
 }
@@ -1806,15 +1809,15 @@
     opacity: 0;
   }
   15% {
-    transform: translate(6px, 2px) scale(0.9, 1.15);
+    transform: translate(6px, 2px) scale(0.9, 1.05);
     opacity: 0.95;
   }
   60% {
-    transform: translate(14px, 36px) scale(0.6, 1.9);
+    transform: translate(14px, 36px) scale(0.72, 1.24);
     opacity: 0.75;
   }
   100% {
-    transform: translate(18px, 64px) scale(0.85, 1.1);
+    transform: translate(18px, 64px) scale(0.82, 1.02);
     opacity: 0;
   }
 }
@@ -1825,11 +1828,11 @@
     opacity: 0;
   }
   18% {
-    transform: translate(-8px, 4px) scale(0.85, 1.1);
+    transform: translate(-8px, 4px) scale(0.85, 1.0);
     opacity: 0.92;
   }
   100% {
-    transform: translate(-16px, 54px) scale(0.75, 1.05);
+    transform: translate(-16px, 54px) scale(0.72, 0.95);
     opacity: 0;
   }
 }
@@ -1840,11 +1843,11 @@
     opacity: 0;
   }
   18% {
-    transform: translate(8px, 4px) scale(0.85, 1.1);
+    transform: translate(8px, 4px) scale(0.85, 1.0);
     opacity: 0.92;
   }
   100% {
-    transform: translate(16px, 56px) scale(0.75, 1.05);
+    transform: translate(16px, 56px) scale(0.72, 0.95);
     opacity: 0;
   }
 }
@@ -1858,7 +1861,7 @@
     opacity: 0.9;
   }
   100% {
-    transform: translate(-66px, 42px) scale(0.85, 1.5);
+    transform: translate(-66px, 42px) scale(0.85, 1.2);
     opacity: 0;
   }
 }
@@ -1872,7 +1875,7 @@
     opacity: 0.9;
   }
   100% {
-    transform: translate(62px, 46px) scale(0.85, 1.5);
+    transform: translate(62px, 46px) scale(0.85, 1.2);
     opacity: 0;
   }
 }
@@ -1883,7 +1886,7 @@
     opacity: 0.95;
   }
   100% {
-    transform: translate(-92px, 20px) scale(0.75, 1.7);
+    transform: translate(-92px, 20px) scale(0.72, 1.05);
     opacity: 0;
   }
 }
@@ -1894,31 +1897,32 @@
     opacity: 0.95;
   }
   100% {
-    transform: translate(86px, 26px) scale(0.75, 1.7);
+    transform: translate(86px, 26px) scale(0.72, 1.05);
     opacity: 0;
   }
 }
 
-/* 真实爆浆下坠：粘丝带先挂壁拉长（细长条 + 顶端连球），后半段滴头脱离继续拉丝坠地（全程拉长态，不回弹成圆团） */
+/* 真实爆浆下坠：滴头涌出后立即脱离破口 → 圆润滴头加速下坠（不拉长，最长 1.12 倍）→ 落地摊平消失
+   全程圆润比例、上端不连裂口（真实稠馅滴落是断开的圆滴，不是吊着的拉丝） */
 @keyframes squishyJamDrop {
   0% {
-    transform: translate(0, -4px) scale(0.5, 0.6);
+    transform: translate(0, -4px) scale(0.45, 0.55);
     opacity: 0;
   }
-  10% {
-    transform: translate(0, 0px) scale(0.85, 1.3);
+  7% {
+    transform: translate(0, 2px) scale(0.88, 1.0);
     opacity: 0.96;
   }
   35% {
-    transform: translate(0, 26px) scale(0.55, 2);
+    transform: translate(0, 26px) scale(0.85, 1.1);
     opacity: 0.95;
   }
   75% {
-    transform: translate(0, 60px) scale(0.44, 2.6);
+    transform: translate(0, 60px) scale(0.82, 1.12);
     opacity: 0.72;
   }
   100% {
-    transform: translate(0, 92px) scale(0.36, 2.1);
+    transform: translate(0, 92px) scale(1.08, 0.8);
     opacity: 0;
   }
 }
@@ -1981,64 +1985,33 @@
   top: 42.5%;
 }
 
-/* 捏爆态：从裂缝口流动涌出（鼓胀 → 摊开 → 重力下垂拉长，黏稠挂壁，无回缩） */
-.squishy-ooze.is-burst {
-  animation: squishyOozeFlow 1.42s cubic-bezier(0.35, 0.15, 0.55, 0.7) forwards;
-  animation-fill-mode: both;
-}
-
-
-
-.squishy-ooze-0.is-burst {
-  animation-delay: 0.34s;
-}
-
-.squishy-ooze-1.is-burst {
-  animation-delay: 0.44s;
-}
-
-.squishy-ooze-2.is-burst {
-  animation-delay: 0.38s;
-}
-
-.squishy-ooze-3.is-burst {
-  animation-delay: 0.52s;
-}
-
-.squishy-ooze-4.is-burst {
-  animation-delay: 0.48s;
-}
-
-.squishy-ooze-5.is-burst {
-  animation-delay: 0.56s;
-}
-
+/* 捏爆态：从裂缝口自然流出（涌出鼓包 → 受重力摊开变宽 → 沿球面缓慢流淌下移，全程圆润无回缩）
+   不用 scaleY 拉长成条——真实稠馅从破口溢出是「摊开+下淌」，不是被挤出长条 */
 @keyframes squishyOozeFlow {
   0% {
     opacity: 0;
-    transform: scale(0.22) translateY(-10%);
+    transform: scale(0.22, 0.28) translateY(-8%);
   }
-  20% {
+  22% {
     opacity: 0.9;
-    transform: scale(0.92) translateY(0) scaleY(0.92);
+    transform: scale(0.95, 0.88) translateY(2%);
   }
-  44% {
+  46% {
     opacity: 0.95;
-    transform: scale(1.14) translateY(10%) scaleY(1.2);
+    transform: scale(1.18, 1.02) translateY(10%);
   }
   72% {
     opacity: 0.92;
-    transform: scale(1.08) translateY(22%) scaleY(1.36);
+    transform: scale(1.3, 1.1) translateY(20%);
   }
   100% {
     opacity: 0.72;
-    transform: scale(0.98) translateY(34%) scaleY(1.5);
+    transform: scale(1.42, 1.16) translateY(30%);
   }
 }
 
-/* ---------- 裂缝泵浆柱（捏爆时从主裂缝向上流动泵出，涌出后缓慢瘫软倒伏） ---------- */
-
-.squishy-pump-wrap {
+/* 自然流浆（替代旧竖直泵柱）：三团馅料从主裂口自然涌出成堆，沿球面缓缓淌下摊开（无向上喷射长条） */
+.squishy-flow-wrap {
   position: absolute;
   left: 50%;
   top: 50%;
@@ -2047,136 +2020,123 @@
   z-index: 8;
 }
 
-/* 单根浆柱：细长馅料从裂缝口竖直泵出，多段果冻式生长后缓缓倒伏（全程流动感，无回弹） */
-.squishy-pump {
+/* 单团流浆：圆润馅堆，涌出→鼓包→摊宽下淌→摊平（transform 全程交给 keyframes） */
+.squishy-flow {
   position: absolute;
-  width: 13px;
-  height: 54px;
-  margin-left: -6.5px;
-  margin-top: -46px;
-  border-radius: 44% 46% 42% 48% / 12% 14% 86% 88%;
+  width: 46px;
+  height: 30px;
+  margin-left: -23px;
+  margin-top: -24px;
+  border-radius: 52% 48% 46% 54% / 40% 42% 60% 58%;
   box-shadow:
-    inset 0 -3px 6px rgba(0, 0, 0, 0.2),
-    inset 0 2px 4px rgba(255, 255, 255, 0.35);
-  transform-origin: 50% 100%;
+    inset 0 -4px 8px rgba(0, 0, 0, 0.2),
+    inset 0 3px 5px rgba(255, 255, 255, 0.42);
+  transform-origin: 50% 20%;
   animation-duration: 1.5s;
-  animation-timing-function: cubic-bezier(0.3, 0.35, 0.5, 0.65);
+  animation-timing-function: cubic-bezier(0.34, 0.28, 0.56, 0.72);
   animation-fill-mode: both;
   animation-iteration-count: 1;
   opacity: 0;
 }
 
-/* 三根浆柱：从三条主裂缝口泵出，各带错峰延迟（最迟 0.34s + 1.5s = 1.84s < BURST_MS） */
-.squishy-pump-0 {
-  margin-left: -34px;
-  animation-name: squishyPumpL;
-  animation-delay: 0.26s;
-}
-
-.squishy-pump-1 {
-  margin-left: 0;
-  animation-name: squishyPumpC;
+/* 三团流浆：三条主裂缝口，错峰延迟（最迟 0.4s + 1.5s = 1.9s < BURST_MS 1950ms） */
+.squishy-flow-0 {
+  margin-left: -44px;
+  animation-name: squishyFlowL;
   animation-delay: 0.3s;
 }
 
-.squishy-pump-2 {
-  margin-left: 24px;
-  animation-name: squishyPumpR;
-  animation-delay: 0.2s;
+.squishy-flow-1 {
+  animation-name: squishyFlowC;
+  animation-delay: 0.36s;
 }
 
-/* 左柱：多段生长 → 顶端鼓胀 → 大幅瘫软倒伏贴面（果冻感，无回弹） */
-@keyframes squishyPumpL {
-  0% {
-    transform: translateY(6px) scaleY(0.12) scaleX(1.35);
-    opacity: 0;
-  }
-  12% {
-    transform: translateY(-8px) scaleY(0.62) scaleX(1.1);
-    opacity: 0.95;
-  }
-  26% {
-    transform: translateY(-20px) scaleY(1.05) scaleX(0.9);
-    opacity: 0.96;
-  }
-  42% {
-    transform: translateY(-24px) scaleY(1.16) scaleX(0.86) rotate(-4deg);
-    opacity: 0.94;
-  }
-  60% {
-    transform: translateY(-14px) scaleY(0.98) scaleX(1) rotate(-22deg);
-    opacity: 0.88;
-  }
-  80% {
-    transform: translateY(4px) scaleY(0.72) scaleX(1.24) rotate(-48deg);
-    opacity: 0.6;
-  }
-  100% {
-    transform: translateY(16px) scaleY(0.5) scaleX(1.45) rotate(-72deg);
-    opacity: 0;
-  }
+.squishy-flow-2 {
+  margin-left: 30px;
+  animation-name: squishyFlowR;
+  animation-delay: 0.24s;
 }
 
-/* 中柱：涌出最高，多段果冻式起伏后大幅瘫倒贴面 */
-@keyframes squishyPumpC {
+/* 左团：从裂口涌出 → 鼓成圆堆 → 向左下摊宽流淌 → 摊平铺在球面上 */
+@keyframes squishyFlowL {
   0% {
-    transform: translateY(6px) scaleY(0.12) scaleX(1.35);
+    transform: translateY(-8px) scale(0.3, 0.28);
     opacity: 0;
   }
-  12% {
-    transform: translateY(-12px) scaleY(0.7) scaleX(1.08);
+  16% {
+    transform: translateY(-2px) scale(0.85, 0.8);
     opacity: 0.95;
   }
-  28% {
-    transform: translateY(-28px) scaleY(1.2) scaleX(0.88);
+  34% {
+    transform: translateY(4px) scale(1.05, 0.94);
     opacity: 0.96;
   }
-  46% {
-    transform: translateY(-33px) scaleY(1.3) scaleX(0.84) rotate(2deg);
+  58% {
+    transform: translate(-6px, 16px) scale(1.2, 0.9);
     opacity: 0.94;
-  }
-  64% {
-    transform: translateY(-18px) scaleY(1) scaleX(1.04) rotate(18deg);
-    opacity: 0.86;
-  }
-  84% {
-    transform: translateY(4px) scaleY(0.68) scaleX(1.3) rotate(42deg);
-    opacity: 0.58;
-  }
-  100% {
-    transform: translateY(18px) scaleY(0.5) scaleX(1.5) rotate(62deg);
-    opacity: 0;
-  }
-}
-
-/* 右柱：错峰涌出，缓缓倒向右侧 */
-@keyframes squishyPumpR {
-  0% {
-    transform: translateY(6px) scaleY(0.12) scaleX(1.35);
-    opacity: 0;
-  }
-  12% {
-    transform: translateY(-6px) scaleY(0.58) scaleX(1.12);
-    opacity: 0.95;
-  }
-  28% {
-    transform: translateY(-18px) scaleY(1) scaleX(0.92);
-    opacity: 0.96;
-  }
-  46% {
-    transform: translateY(-21px) scaleY(1.12) scaleX(0.88) rotate(5deg);
-    opacity: 0.94;
-  }
-  64% {
-    transform: translateY(-12px) scaleY(0.96) scaleX(1.04) rotate(22deg);
-    opacity: 0.86;
   }
   82% {
-    transform: translateY(4px) scaleY(0.7) scaleX(1.28) rotate(50deg);
-    opacity: 0.6;
+    transform: translate(-12px, 30px) scale(1.34, 0.82);
+    opacity: 0.86;
   }
   100% {
-    transform: translateY(14px) scaleY(0.5) scaleX(1.48) rotate(76deg);
+    transform: translate(-18px, 42px) scale(1.44, 0.76);
+    opacity: 0;
+  }
+}
+
+/* 中团：最大，涌出后正前方摊开下淌，摊得最宽 */
+@keyframes squishyFlowC {
+  0% {
+    transform: translateY(-8px) scale(0.28, 0.26);
+    opacity: 0;
+  }
+  16% {
+    transform: translateY(-2px) scale(0.9, 0.84);
+    opacity: 0.95;
+  }
+  36% {
+    transform: translateY(6px) scale(1.14, 1.0);
+    opacity: 0.96;
+  }
+  60% {
+    transform: translateY(20px) scale(1.3, 0.92);
+    opacity: 0.94;
+  }
+  84% {
+    transform: translateY(34px) scale(1.44, 0.82);
+    opacity: 0.86;
+  }
+  100% {
+    transform: translateY(46px) scale(1.5, 0.76);
+    opacity: 0;
+  }
+}
+
+/* 右团：涌出后向右下摊开流淌 */
+@keyframes squishyFlowR {
+  0% {
+    transform: translateY(-8px) scale(0.28, 0.28);
+    opacity: 0;
+  }
+  16% {
+    transform: translateY(-2px) scale(0.82, 0.78);
+    opacity: 0.95;
+  }
+  34% {
+    transform: translateY(4px) scale(1.0, 0.9);
+    opacity: 0.96;
+  }
+  58% {
+    transform: translate(5px, 15px) scale(1.16, 0.88);
+    opacity: 0.94;
+  }
+  82% {
+    transform: translate(11px, 28px) scale(1.3, 0.8);
+    opacity: 0.86;
+  }
+  100% {
+    transform: translate(16px, 40px) scale(1.4, 0.74);
     opacity: 0;
   }
 }

@@ -1101,13 +1101,13 @@ const playSfxOnce = (taro: openCardTaro | null, src: string, rate: number, volum
                   {burstFlash ? <View className="squishy-burst-flash" /> : null}
                   {/* 爆浆冲击波：从球心向外扩散的蜡皮震动环 */}
                   {burstWave ? <View className="squishy-burst-wave" /> : null}
-                  {/* 裂缝泵浆：捏爆时馅料从三条主裂缝向上泵出（细长浆柱涌出后瘫软下垂，无回弹） */}
+                  {/* 自然流浆：捏爆时三团馅料从主裂口涌出成堆、沿球面摊开下淌（替代旧竖直浆柱，无喷射长条） */}
                   {bursting ? (
-                    <View className="squishy-pump-wrap">
+                    <View className="squishy-flow-wrap">
                       {[0, 1, 2].map((id) => (
                         <View
-                          key={`pump-${id}`}
-                          className={`squishy-pump squishy-pump-${id}`}
+                          key={`flow-${id}`}
+                          className={`squishy-flow squishy-flow-${id}`}
                           style={`background-color: ${burstJamColor};`}
                         />
                       ))}
@@ -1145,7 +1145,7 @@ const playSfxOnce = (taro: openCardTaro | null, src: string, rate: number, volum
                       style={`background-color: ${waxShellColor};`}
                     />
                   ))}
-                  {/* 爆浆滴落：4 滴斜飞迸溅 + 5 滴挂壁下坠拉丝（无馅用米白内瓤） */}
+                  {/* 爆浆滴落：4 滴斜飞迸溅 + 5 滴圆润滴头自然下坠（无馅用米白内瓤，不拉长条） */}
                   {jamDropIds.map((id) => (
                     <View
                       key={`jam-${id}`}
