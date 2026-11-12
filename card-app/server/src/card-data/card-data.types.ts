@@ -122,11 +122,9 @@ export interface DiyPayload {
   fillings: DiyFillingOption[];
 }
 
-/** 右侧叠捏数量配置（快捷档 + 自定义输入） */
+/** 叠捏数量配置（加减号步进 + 数字输入） */
 export interface StackConfig {
-  /** 快捷档位（×1 / ×3 / ×5） */
-  quickOptions: { count: number; label: string }[];
-  /** 自定义输入标签 */
+  /** 数字输入标签（"数量"） */
   customLabel: string;
   /** 数量上限 */
   max: number;

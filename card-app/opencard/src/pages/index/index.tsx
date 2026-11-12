@@ -34,11 +34,40 @@ const CRACK_MIN_POWER = 60;
 const DENT_STEPS = [30, 60, 90];
 /** 数量越界提示时长（ms） */
 const STACK_HINT_MS = 800;
+/** 长按步进首次延迟（ms） */
+const STEP_HOLD_DELAY_MS = 450;
+/** 长按步进连续间隔（ms） */
+const STEP_HOLD_INTERVAL_MS = 110;
+/** 长按步进连发步长 */
+const STEP_HOLD_BATCH = 5;
+/** 蜡皮混白比例：主体色 → 泛白蜡壳 */
+const WAX_MIX_RATIO = 0.62;
 
 /** 松手反馈对象 */
 interface PressFeedback {
   level: SqueezeLevel;
   gain: number;
+}
+
+/** 十六进制色混合（向 target 色靠拢 ratio 比例） */
+function mixHexColor(hex: string, target: string, ratio: number): string {
+  const parse = (value: string) => {
+    const normalized = value.replace("#", "");
+    if (normalized.length !== 6) return null;
+    const r = parseInt(normalized.slice(0, 2), 16);
+    const g = parseInt(normalized.slice(2, 4), 16);
+    const b = parseInt(normalized.slice(4, 6), 16);
+    if (Number.isNaN(r) || Number.isNaN(g) || Number.isNaN(b)) return null;
+    return { r, g, b };
+  };
+  const from = parse(hex);
+  const to = parse(target);
+  if (!from || !to) return hex;
+  const mix = (a: number, b: number) => Math.round(a + (b - a) * ratio);
+  const r = mix(from.r, to.r);
+  const g = mix(from.g, to.g);
+  const b = mix(from.b, to.b);
+  return `#${[r, g, b].map((v) => Math.max(0, Math.min(255, v)).toString(16).padStart(2, "0")).join("")}`;
 }
 
 /** 根据当前力度返回命中的档位（取满足 min 的最高档） */
@@ -53,47 +82,42 @@ function matchLevel(power: number, levels: SqueezeLevel[]): SqueezeLevel | null 
 }
 
 /**
- * 蜂窝密堆布局（JS 计算，返回容器坐标百分比 -50% ~ +50%）：按数量决定列数与行列偏移。
- * 1 只居中大号；2-3 只品字对开；4-7 两列蜂窝；8-19 三列蜂窝；20-49 四列；50+ 五列密堆。
- * 调用方将百分比换算为容器 px 偏移（百分比偏移相对球体自身尺寸，大数量时会挤成一团）。
+ * 侧视堆叠布局（JS 计算，返回容器 px 偏移）：垂直叠成一座捏捏塔。
+ * 底部对齐、整体垂直居中；每只带轻微横向错位（正弦自然抖动），层间距按数量压缩重叠。
  */
-function stackLayout(count: number): { x: number; y: number }[] {
+function stackLayout(
+  count: number,
+  ballHeightPx: number,
+  containerHeightPx: number,
+): { x: number; y: number }[] {
   const points: { x: number; y: number }[] = [];
   if (count <= 1) {
     return [{ x: 0, y: 0 }];
   }
-  let cols = 1;
-  if (count <= 3) cols = count;
-  else if (count <= 7) cols = 2;
-  else if (count <= 19) cols = 3;
-  else if (count <= 49) cols = 4;
-  else cols = 5;
-  // 行列蜂窝：偶数行错开半格，形成紧密堆叠的「捏捏山」
-  const rows = Math.ceil(count / cols);
-  const stepX = 100 / cols;
-  const stepY = 100 / rows;
+  // 层间距：单层完整高度的 55%（自然堆叠重叠），超出可用高度时按比例压缩
+  const naturalStep = ballHeightPx * 0.55;
+  const maxTower = containerHeightPx * 0.86;
+  const stepY = Math.min(naturalStep, maxTower / count);
+  const centerYOffset = ((count - 1) * stepY) / 2;
   for (let i = 0; i < count; i += 1) {
-    const row = Math.floor(i / cols);
-    const col = i % cols;
-    const rowOffset = row % 2 === 1 ? stepX * 0.5 : 0;
-    const colLimit = Math.min(cols, count - row * cols);
-    let x = (col + (rowOffset > 0 ? 0.5 : 0)) * stepX;
-    if (colLimit < cols && rowOffset > 0) {
-      x = (col + 0.5 + (cols - colLimit) * 0.5) * stepX;
-    }
-    points.push({ x: x - 50, y: (row + 0.5) * stepY - 50 });
+    const jitter = Math.sin(i * 2.3) * containerHeightPx * 0.018 + Math.cos(i * 0.7) * containerHeightPx * 0.009;
+    points.push({
+      x: (jitter / (containerHeightPx * 0.86)) * 100,
+      y: (centerYOffset - i * stepY) / containerHeightPx * 100,
+    });
   }
   return points;
 }
 
-/** 单只捏捏宽度占比（%）：数量越多单只越小，形成大→小的视觉密度 */
-function stackBallWidth(count: number): number {
-  if (count <= 1) return 40;
-  if (count <= 3) return 30;
-  if (count <= 7) return 24;
-  if (count <= 19) return 18;
-  if (count <= 49) return 14;
-  return 11;
+/** 单只捏捏尺寸（%）：宽度相对容器宽，高度相对容器高（侧视压扁椭圆）；数量越多单只越小 */
+function stackBallSize(count: number): { widthPct: number; heightRatio: number } {
+  // heightRatio：侧视椭圆高度 = 宽度 px × ratio（单只保持近圆，堆叠压扁）
+  if (count <= 1) return { widthPct: 36, heightRatio: 1 };
+  if (count <= 3) return { widthPct: 34, heightRatio: 0.62 };
+  if (count <= 10) return { widthPct: 30, heightRatio: 0.58 };
+  if (count <= 25) return { widthPct: 25, heightRatio: 0.52 };
+  if (count <= 50) return { widthPct: 19, heightRatio: 0.46 };
+  return { widthPct: 14, heightRatio: 0.42 };
 }
 
 /** 渲染爱心形状的三片结构件（容器内按百分比定位，可任意缩放） */
@@ -194,7 +218,7 @@ export default function IndexPage() {
   const [relief, setRelief] = useState(0); // 累计解压值
   const [feedback, setFeedback] = useState<PressFeedback | null>(null); // 松手反馈
   const [pressCount, setPressCount] = useState(0); // 本次捏捏次数
-  const [bestLabel, setBestLabel] = useState<string>("—"); // 最高力度档
+  const [bestLabel, setBestLabel] = useState<string>("—"); // 最高压力等级档
   const [soundOn, setSoundOn] = useState(true);
 
   // v3 状态
@@ -203,6 +227,7 @@ export default function IndexPage() {
   const [stackInput, setStackInput] = useState("1"); // 自定义数量输入框文本
   const [stackHint, setStackHint] = useState(false); // 数量越界提示
   const [bursting, setBursting] = useState(false); // 爆裂动画中
+  const [burstShaped, setBurstShaped] = useState(false); // 捏爆后破相残体（换新前保持）
   const [selPreset, setSelPreset] = useState<string>(""); // DIY 选中形象预设（空=自定义）
   const [selShape, setSelShape] = useState<string>("round"); // DIY 身体形状
   const [selEar, setSelEar] = useState<string>("none"); // DIY 耳朵
@@ -228,7 +253,10 @@ export default function IndexPage() {
   const pressingRef = useRef(false);
   const stackCountRef = useRef(1);
   const stackHintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // 堆叠容器实测尺寸（px）：百分比布局点换算 px 偏移用（百分比偏移相对球体自身，大数量会挤成一团）
+  // 长按步进计时器（−/+ 按钮）
+  const stepHoldTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const stepHoldIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // 堆叠容器实测尺寸（px）：侧视堆叠布局按容器实际尺寸计算层距
   const [stackSize, setStackSize] = useState<{ w: number; h: number } | null>(null);
   const stackSizeQueriedRef = useRef(false);
 
@@ -258,6 +286,8 @@ export default function IndexPage() {
       if (burstTimerRef.current) clearTimeout(burstTimerRef.current);
       if (reportTimerRef.current) clearTimeout(reportTimerRef.current);
       if (stackHintTimerRef.current) clearTimeout(stackHintTimerRef.current);
+      if (stepHoldTimerRef.current) clearTimeout(stepHoldTimerRef.current);
+      if (stepHoldIntervalRef.current) clearInterval(stepHoldIntervalRef.current);
       soundTimersRef.current.forEach((timer) => clearTimeout(timer));
       soundTimersRef.current = [];
     };
@@ -329,7 +359,6 @@ export default function IndexPage() {
   const levels = cardData?.views?.initial?.levels ?? [];
   const diy = cardData?.views?.initial?.diy;
   const stack = cardData?.views?.initial?.stack;
-  const quickOptions = stack?.quickOptions ?? [];
   const stackMin = stack?.min ?? 1;
   const stackMax = stack?.max ?? STACK_MAX;
   // 当前生效捏捏：DIY 捏捏优先，否则为预设玩具
@@ -469,6 +498,12 @@ export default function IndexPage() {
     setBursting(false);
   }, []);
 
+  /** 完全重置爆裂状态（换新 / 切换玩具 / DIY 应用时调用，恢复全新蜡皮） */
+  const resetBurst = useCallback(() => {
+    cancelBurst();
+    setBurstShaped(false);
+  }, [cancelBurst]);
+
   /** 开始按压 */
   const handlePressStart = useCallback(() => {
     if (!cardData || pressingRef.current) return;
@@ -525,7 +560,7 @@ export default function IndexPage() {
         bestRankRef.current = rank;
         setBestLabel(level.label);
       }
-      // 捏爆档触发外壳崩裂 + 屑屑狂掉 + 爆浆拉丝
+      // 捏爆档触发蜡皮崩裂：碎片飞溅 + 露馅 + 挂壁拉丝；动画结束进入破相残体态
       if (level.min >= 70) {
         setBursting(true);
         if (burstTimerRef.current) clearTimeout(burstTimerRef.current);
@@ -533,6 +568,7 @@ export default function IndexPage() {
           burstTimerRef.current = null;
           if (mountedRef.current) {
             setBursting(false);
+            setBurstShaped(true); // 爆后保持变形残体：不规则圆角 + 馅芯外露
           }
         }, BURST_MS);
       }
@@ -574,7 +610,7 @@ export default function IndexPage() {
     (value: string) => {
       const parsed = parseInt(value, 10);
       if (!Number.isFinite(parsed) || value.trim() === "") {
-        // 非数字/清空：不钳制，仅回显原始文本（快捷档点击会重置）
+        // 非数字/清空：不钳制，仅回显原始文本（步进按钮点击会重置）
         setStackInput(value);
         return;
       }
@@ -587,6 +623,41 @@ export default function IndexPage() {
     [applyStackCount],
   );
 
+  /** 停止长按连步 */
+  const stopStepHold = useCallback(() => {
+    if (stepHoldTimerRef.current) {
+      clearTimeout(stepHoldTimerRef.current);
+      stepHoldTimerRef.current = null;
+    }
+    if (stepHoldIntervalRef.current) {
+      clearInterval(stepHoldIntervalRef.current);
+      stepHoldIntervalRef.current = null;
+    }
+  }, []);
+
+  /** 步进 ±delta：单击一次；长按 450ms 后每 110ms 连发（连发步长 5），松手停止 */
+  const startStep = useCallback(
+    (delta: 1 | -1) => {
+      if (pressingRef.current) return;
+      applyStackCount(stackCountRef.current + delta);
+      stopStepHold();
+      stepHoldTimerRef.current = setTimeout(() => {
+        stepHoldTimerRef.current = null;
+        stepHoldIntervalRef.current = setInterval(() => {
+          const base = stackCountRef.current;
+          const next = Math.min(stackMax, Math.max(stackMin, base + delta * STEP_HOLD_BATCH));
+          if (next === base) {
+            stopStepHold();
+            return;
+          }
+          setStackCount(next);
+          setStackInput(String(next));
+        }, STEP_HOLD_INTERVAL_MS);
+      }, STEP_HOLD_DELAY_MS);
+    },
+    [applyStackCount, stackMax, stackMin, stopStepHold],
+  );
+
   /** 切换玩具 */
   const handleSwitchToy = useCallback(
     (index: number) => {
@@ -595,7 +666,7 @@ export default function IndexPage() {
         clearInterval(powerTimerRef.current);
         powerTimerRef.current = null;
       }
-      cancelBurst();
+      resetBurst();
       setCustomToy(null); // 回到预设玩具
       setToyIndex(index);
       setPower(0);
@@ -604,7 +675,7 @@ export default function IndexPage() {
       setSqueezed(false);
       setFeedback(null);
     },
-    [toyIndex, customToy, cancelBurst],
+    [toyIndex, customToy, resetBurst],
   );
 
   /** 换新一个捏捏（当前玩具回弹到全新状态） */
@@ -613,12 +684,12 @@ export default function IndexPage() {
       clearInterval(powerTimerRef.current);
       powerTimerRef.current = null;
     }
-    cancelBurst();
+    resetBurst();
     setSqueezed(false);
     setPower(0);
     powerRef.current = 0;
     setFeedback(null);
-  }, [cancelBurst]);
+  }, [resetBurst]);
 
   /** 打开 DIY 弹层（以当前捏捏初始化部位） */
   const handleOpenDiy = useCallback(() => {
@@ -683,13 +754,13 @@ export default function IndexPage() {
       clearInterval(powerTimerRef.current);
       powerTimerRef.current = null;
     }
-    cancelBurst();
+    resetBurst();
     setPower(0);
     powerRef.current = 0;
     setPressing(false);
     setSqueezed(false);
     setFeedback(null);
-  }, [diy, selShape, selColor, selEar, selFilling, selPreset, cancelBurst]);
+  }, [diy, selShape, selColor, selEar, selFilling, selPreset, resetBurst]);
 
   /** 重新拉取卡片数据 */
   const handleRetry = useCallback(() => {
@@ -703,9 +774,17 @@ export default function IndexPage() {
   // DIY 弹层开启时 Footer 不渲染（避免与弹层重叠交互）
   const showFooter = !!cardData && !diyOpen;
 
-  // 形变几何值（JS 计算，动态内联）：按住时随力度压扁；松手后保持凹陷；爆裂时塌陷外扩压扁
-  const squishScaleX = bursting ? 1.42 : pressing ? 1 + 0.14 * (power / 100) : squeezed ? 1.06 : 1;
-  const squishScaleY = bursting ? 0.3 : pressing ? 1 - 0.3 * (power / 100) : squeezed ? 0.78 : 1;
+  // 形变几何值（JS 计算，动态内联）：按住时随力度压扁；松手后保持凹陷；爆裂中塌陷外扩；爆后残体保持破相（饱满偏歪）
+  const squishScaleX = bursting ? 1.42 : burstShaped ? 1.12 : pressing ? 1 + 0.14 * (power / 100) : squeezed ? 1.06 : 1;
+  const squishScaleY = bursting
+    ? 0.3
+    : burstShaped
+      ? 0.66
+      : pressing
+        ? 1 - 0.3 * (power / 100)
+        : squeezed
+          ? 0.78
+          : 1;
   const squishScale = `scaleX(${squishScaleX.toFixed(3)}) scaleY(${squishScaleY.toFixed(3)})`;
   // 基础捏痕透明度：按压中随力度加深；松手后保持
   const dentOpacity = pressing ? Math.min(0.9, 0.25 + 0.75 * (power / 100)) : squeezed ? 0.9 : 0;
@@ -730,16 +809,33 @@ export default function IndexPage() {
   // 爆浆色：有馅用馅色，无馅用米白内瓤色
   const burstJamColor =
     activeFilling && activeFilling.id !== "none" ? activeFilling.hex : "#fff7ec";
-  // 内馅芯可见：DIY 捏捏有馅时常驻展示；预设玩具与无馅捏捏在爆裂时展示内瓤
+  // 内馅芯：捏爆时涌出放大 2.2；爆后残体常驻露出并偏心挤出（蜡皮破了馅向破口侧堆）；平时有馅玩具淡显
   const fillingVisible = !!activeFilling && activeFilling.id !== "none";
-  const fillingCoreTransform = `translate(-50%, -50%) scale(${bursting ? 1.8 : 1})`;
-  const fillingCoreOpacity = bursting ? 0.95 : pressing ? 0.72 : squeezed ? 0.8 : 0.55;
+  const fillingCoreTransform = `translate(-50%, -50%) scale(${bursting ? 2.2 : burstShaped ? 1.4 : 1}) translate(${burstShaped ? "6%, -10%" : "0, 0"})`;
+  const fillingCoreOpacity = bursting
+    ? 0.95
+    : burstShaped
+      ? 0.88
+      : pressing
+        ? 0.72
+        : squeezed
+          ? 0.8
+          : 0.55;
 
-  // 叠捏堆叠：蜂窝密堆布局 + 数量反比尺寸；百分比点换算容器 px 偏移（相对容器而非球体自身）
-  const stackList = stackLayout(stackCount);
-  const ballWidthPct = stackBallWidth(stackCount);
+  // 叠捏堆叠：侧视垂直堆叠成塔（底部对齐、整体居中）；单只尺寸按数量收缩
+  const containerW = stackSize?.w ?? 300;
+  const containerH = stackSize?.h ?? 240;
+  const ballSize = stackBallSize(stackCount);
+  const ballWidthPx = (ballSize.widthPct / 100) * containerW;
+  const ballHeightPx = ballWidthPx * ballSize.heightRatio;
+  const stackList = stackLayout(stackCount, ballHeightPx, containerH);
   const isMultiStack = stackCount > 1;
-  // 真实爆浆冲击序：白闪（0-220ms）→ 冲击波扩散环（0-550ms）→ 碎片从边缘炸出（6 大块 + 6 细屑）
+  // 蜡皮色：主体色向白色混合（泛白蜡壳）；碎片/翻皮同为蜡皮色
+  const waxShellColor = mixHexColor(activeToy?.color ?? "#ffe6d8", "#ffffff", WAX_MIX_RATIO);
+  // 捏爆变形圆角（不对称，蜡皮局部塌陷鼓包）：爆裂中偏规则崩裂，残体态更歪扭不对称
+  const burstRadius = "52% 48% 55% 45% / 62% 38% 58% 42%";
+  const remnantRadius = "64% 40% 58% 44% / 48% 70% 36% 66%";
+  // 真实爆浆冲击序：白闪（0-220ms）→ 冲击波扩散环（0-550ms）→ 蜡皮碎片从边缘炸出（6 大块 + 6 细屑 + 3 掉屑）
   // → 浆帽喷涌 + 浆滴挂壁拉丝（0-1.3s，无馅用米白内瓤色）→ 浆点四溅（0-0.6s）→ 顶部破口翻皮
   const burstFlash = bursting;
   const burstWave = bursting;
@@ -748,32 +844,43 @@ export default function IndexPage() {
   const jamSpatterIds = bursting ? [0, 1, 2, 3, 4, 5, 6, 7] : [];
   // 破口翻皮编号：顶部裂口左右两片翘皮
   const peelIds = bursting ? [0, 1] : [];
-  // 爆裂碎片编号（真实脆皮：6 大块 + 6 细屑 = 12 块，从球缘炸出）
+  // 蜡皮碎片编号（6 大块 + 6 细屑 = 12 块，从球缘炸出；颜色为蜡皮色）
   const fragmentIds = bursting ? [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] : [];
+  // 蜡皮掉屑编号（3 片向下坠落，重力掉落）
+  const waxDropIds = bursting ? [0, 1, 2] : [];
   // 爆浆滴落编号（捏爆时，无馅用米白内瓤）：5 滴挂壁下坠 + 4 滴斜飞迸溅 + 4 滴边缘溢流
   const jamDropIds = bursting ? [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] : [];
 
-  /** 渲染单只捏捏（身体 + 耳朵 + 凹陷 + 裂纹 + 内馅） */
+  /** 渲染单只捏捏（蜡皮壳 + 主色晕染 + 耳朵 + 凹陷 + 裂纹 + 内馅芯） */
   const renderSquishy = (index: number) => {
     const point = stackList[index] ?? { x: 0, y: 0 };
     const shapeId = activeToy?.shapeId ?? "round";
     const toyColor = activeToy?.color ?? "#ffe6d8";
     const earId = activeToy?.earId ?? "none";
     const isHeart = shapeId === "heart";
-    // 堆叠球宽度必须显式给值（Lynx 无 auto 收缩）：统一百分比宽度
-    const widthStyle = `width: ${ballWidthPct}%;`;
-    // 首只在文档流中定位，其余绝对定位叠放
+    // 蜡皮壳：泛白底色；耳朵/装饰保持主色
+    const shellColor = mixHexColor(toyColor, "#ffffff", WAX_MIX_RATIO);
+    // 尺寸链路：宽度 %（容器宽）+ 高度 px（侧视椭圆压扁）；单只保持近圆
+    const widthStyle = `width: ${ballSize.widthPct}%; height: ${ballHeightPx.toFixed(1)}px;`;
+    // 堆叠偏移：首只在文档流中定位，其余绝对定位叠放；偏移按容器 px 换算
     const posPrefix = index === 0 ? "" : "translate(-50%, -50%) ";
-    // 容器 px 偏移：百分比布局点 × 实测容器尺寸（未量得前用 300px 兜底，量得后自动展开）
-    const containerW = stackSize?.w ?? 300;
-    const containerH = stackSize?.h ?? 240;
     const offsetTranslate =
       point.x === 0 && point.y === 0
         ? ""
         : `translate(${((point.x / 100) * containerW).toFixed(1)}px, ${((point.y / 100) * containerH).toFixed(1)}px) `;
-    const ballStyle = isHeart
+    // 捏爆/爆后残体：不规则变形圆角（蜡皮局部塌陷鼓包）；常态按形状
+    const shellRadius =
+      bursting
+        ? burstRadius
+        : burstShaped
+          ? remnantRadius
+          : isHeart
+            ? "0"
+            : undefined;
+    const radiusStyle = shellRadius ? ` border-radius: ${shellRadius};` : "";
+    const ballStyle = isHeart && !(bursting || burstShaped)
       ? `transform: ${posPrefix}${offsetTranslate}${squishScale};`
-      : `background-color: ${toyColor}; transform: ${posPrefix}${offsetTranslate}${squishScale};`;
+      : `background-color: ${shellColor};${radiusStyle} transform: ${posPrefix}${offsetTranslate}${squishScale};`;
     return (
       <View
         key={`squishy-${index}`}
@@ -785,10 +892,15 @@ export default function IndexPage() {
         onTouchEnd={handlePressEnd}
         onTouchCancel={handlePressEnd}
       >
+        {/* 主色晕染层（蜡皮的彩色晕染） */}
+        <View
+          className="squishy-tint"
+          style={`background-color: ${toyColor};`}
+        />
         {/* 耳朵/头顶装饰（结构件，叠在身体上方） */}
         {renderEarParts(earId, toyColor, `ball-${index}`)}
         {/* 爱心由三片结构件组成（其余形状为容器本体） */}
-        {isHeart ? renderHeartParts(toyColor, `ball-${index}`) : null}
+        {isHeart && !(bursting || burstShaped) ? renderHeartParts(toyColor, `ball-${index}`) : null}
         <View className="squishy-highlight" />
         <View className="squishy-dent" style={`opacity: ${dentOpacity.toFixed(2)};`} />
         <View
@@ -803,14 +915,23 @@ export default function IndexPage() {
           className="squishy-dent squishy-dent-4"
           style={`opacity: ${stepOpacities[2].toFixed(2)};`}
         />
-        {/* 爆浆内馅芯（有馅时） */}
-        {fillingVisible ? (
+        {/* 内馅芯：捏爆时从蜡皮裂口涌出（burstShaped 后常驻露出） */}
+        {fillingVisible || bursting || burstShaped ? (
           <View
             className="squishy-filling-core"
             style={`background-color: ${burstJamColor}; transform: ${fillingCoreTransform}; opacity: ${fillingCoreOpacity.toFixed(2)};`}
           />
         ) : null}
-        {/* 脆皮裂纹（≥60% 力度浮现，捏爆后常驻；6 条放射裂缝） */}
+        {/* 爆后残体主裂口：蜡皮破口常驻（不对称裂口边 + 偏侧塌陷），burstShaped 时渲染 */}
+        {burstShaped ? (
+          <View className="squishy-remnant-cleft">
+            <View className="squishy-remnant-cleft-line squishy-remnant-cleft-line-1" />
+            <View className="squishy-remnant-cleft-line squishy-remnant-cleft-line-2" />
+            <View className="squishy-remnant-cleft-lip squishy-remnant-cleft-lip-l" />
+            <View className="squishy-remnant-cleft-lip squishy-remnant-cleft-lip-r" />
+          </View>
+        ) : null}
+        {/* 蜡皮裂纹（≥60% 力度浮现，捏爆后常驻；6 条放射裂缝） */}
         <View className="squishy-crack-wrap" style={`opacity: ${crackOpacity.toFixed(2)};`}>
           <View className="squishy-crack squishy-crack-1" />
           <View className="squishy-crack squishy-crack-2" />
@@ -865,21 +986,21 @@ export default function IndexPage() {
                   {stackList.map((_, index) => renderSquishy(index))}
                   {/* 爆浆白闪：捏爆瞬间中心高光一闪（最底层） */}
                   {burstFlash ? <View className="squishy-burst-flash" /> : null}
-                  {/* 爆浆冲击波：从球心向外扩散的脆皮震动环 */}
+                  {/* 爆浆冲击波：从球心向外扩散的蜡皮震动环 */}
                   {burstWave ? <View className="squishy-burst-wave" /> : null}
-                  {/* 有馅时浆帽：爆浆中心喷涌鼓包（盖在球上，无馅用米白内瓤） */}
+                  {/* 浆帽：爆浆中心喷涌鼓包（盖在球上，无馅用米白内瓤） */}
                   {burstCap ? (
                     <View
                       className="squishy-burst-cap"
                       style={`background-color: ${burstJamColor};`}
                     />
                   ) : null}
-                  {/* 顶部破口翻皮：裂口两片脆皮翘起（颜色随玩具主体） */}
+                  {/* 顶部破口翻皮：裂口两片蜡皮翘起（泛白蜡壳色） */}
                   {peelIds.map((id) => (
                     <View
                       key={`peel-${id}`}
                       className={`squishy-peel squishy-peel-${id}`}
-                      style={`background-color: ${activeToy?.color ?? "#ffe6d8"};`}
+                      style={`background-color: ${waxShellColor};`}
                     />
                   ))}
                   {/* 飞溅浆点：8 颗小瓤点向四周迸溅（无馅用米白内瓤） */}
@@ -890,12 +1011,20 @@ export default function IndexPage() {
                       style={`background-color: ${burstJamColor};`}
                     />
                   ))}
-                  {/* 脆皮爆裂碎片：6 大块 + 6 细屑（从球缘炸出，颜色由 TSX 内联提供） */}
+                  {/* 蜡皮爆裂碎片：6 大块 + 6 细屑（从球缘炸出，泛白蜡壳色） */}
                   {fragmentIds.map((id) => (
                     <View
                       key={`frag-${id}`}
                       className={`squishy-fragment squishy-frag-${id}`}
-                      style={`background-color: ${activeToy?.color ?? "#ffe6d8"};`}
+                      style={`background-color: ${waxShellColor};`}
+                    />
+                  ))}
+                  {/* 蜡皮掉屑：3 片碎片向下坠落（重力掉落感） */}
+                  {waxDropIds.map((id) => (
+                    <View
+                      key={`wax-${id}`}
+                      className={`squishy-wax-drop squishy-wax-drop-${id}`}
+                      style={`background-color: ${waxShellColor};`}
                     />
                   ))}
                   {/* 爆浆滴落：4 滴斜飞迸溅 + 5 滴挂壁下坠拉丝（无馅用米白内瓤） */}
@@ -907,36 +1036,7 @@ export default function IndexPage() {
                     />
                   ))}
                 </View>
-                {/* 右侧叠捏数量：快捷档 + 自定义输入 */}
-                <View className="squishy-stack-picker">
-                  {quickOptions.map((option) => (
-                    <View
-                      key={`stack-${option.count}`}
-                      className={`squishy-stack-btn${
-                        stackCount === option.count ? " is-active" : ""
-                      }`}
-                      onClick={() => {
-                        if (!pressingRef.current) {
-                          applyStackCount(option.count);
-                        }
-                      }}
-                    >
-                      <Text className="squishy-stack-btn-text">{option.label}</Text>
-                    </View>
-                  ))}
-                  <View className={`squishy-stack-input${stackHint ? " is-hint" : ""}`}>
-                    <Text className="squishy-stack-input-label">{stack?.customLabel ?? "自定义"}</Text>
-                    <Input
-                      className="squishy-stack-input-field"
-                      type="number"
-                      value={stackInput}
-                      maxlength={3}
-                      onInput={(e) => {
-                        handleStackInput(String(e.detail.value ?? ""));
-                      }}
-                    />
-                  </View>
-                </View>
+                {/* 力度条（按压中显示当前压力等级） */}
                 {pressing && currentLevel ? (
                   <View className="squishy-powerbar">
                     <View className="squishy-powerbar-fill" style={`width: ${power}%;`} />
@@ -951,10 +1051,46 @@ export default function IndexPage() {
                 ) : null}
               </View>
 
+              {/* 叠捏数量控制条：− 数字 +（加减号实时步进，长按连发） */}
+              <View className="squishy-stepbar">
+                <View
+                  className={`squishy-step-btn${stackCount <= stackMin ? " is-disabled" : ""}`}
+                  onTouchStart={() => {
+                    startStep(-1);
+                  }}
+                  onTouchEnd={stopStepHold}
+                  onTouchCancel={stopStepHold}
+                >
+                  <Text className="squishy-step-btn-text">−</Text>
+                </View>
+                <View className={`squishy-stack-input${stackHint ? " is-hint" : ""}`}>
+                  <Input
+                    className="squishy-stack-input-field"
+                    type="number"
+                    value={stackInput}
+                    maxlength={3}
+                    onInput={(e) => {
+                      handleStackInput(String(e.detail.value ?? ""));
+                    }}
+                  />
+                  <Text className="squishy-stack-input-label">{stack?.customLabel ?? "数量"}</Text>
+                </View>
+                <View
+                  className={`squishy-step-btn${stackCount >= stackMax ? " is-disabled" : ""}`}
+                  onTouchStart={() => {
+                    startStep(1);
+                  }}
+                  onTouchEnd={stopStepHold}
+                  onTouchCancel={stopStepHold}
+                >
+                  <Text className="squishy-step-btn-text">+</Text>
+                </View>
+              </View>
+
               {/* 统计行 */}
               <View className="squishy-stats">
                 <Text className="squishy-stat">{`已捏 ${pressCount} 次`}</Text>
-                <Text className="squishy-stat">{`最高力度 ${bestLabel}`}</Text>
+                <Text className="squishy-stat">{`最高压力等级 ${bestLabel}`}</Text>
               </View>
             </View>
 

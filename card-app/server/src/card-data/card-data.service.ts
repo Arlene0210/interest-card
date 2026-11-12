@@ -43,21 +43,21 @@ const SQUISHY_CARD_DATA: CardData = {
       levels: [
         {
           min: 0,
-          label: '轻捏',
+          label: 'Lv.1 轻捏',
           feedback: '轻轻一捏，压力松了一点',
           relief: 5,
           onomatopoeia: '啵嘤～',
         },
         {
           min: 35,
-          label: '用力捏',
+          label: 'Lv.2 用力捏',
           feedback: '狠狠捏下去，超解气！',
           relief: 10,
           onomatopoeia: '噗叽！',
         },
         {
           min: 70,
-          label: '捏爆',
+          label: 'Lv.3 捏爆',
           feedback: '把它完全捏爆了！太爽了！',
           relief: 20,
           onomatopoeia: '啪叽！！',
@@ -135,12 +135,7 @@ const SQUISHY_CARD_DATA: CardData = {
         ],
       },
       stack: {
-        quickOptions: [
-          { count: 1, label: '×1' },
-          { count: 3, label: '×3' },
-          { count: 5, label: '×5' },
-        ],
-        customLabel: '自定义',
+        customLabel: '数量',
         max: 100,
         min: 1,
       },

@@ -21,11 +21,11 @@ importers:
   .:
     dependencies:
       '@open-dy/lucide-taro':
-        specifier: ^0.1.9
-        version: 0.1.9(@tarojs/components@4.2.0(@tarojs/helper@4.2.0)(@types/react@18.3.31)(postcss@8.5.32)(rollup@3.30.0)(webpack@5.106.2(@swc/core@1.3.96)(lightningcss@1.33.0)(postcss@8.5.32)))(react@18.3.1)
-      '@open-dy/vibecoding-sdk-taro':
         specifier: ^0.1.12
-        version: 0.1.12(476f75b03ebdd6450ad56dfaee348108)
+        version: 0.1.12(@tarojs/components@4.2.0(@tarojs/helper@4.2.0)(@types/react@18.3.31)(postcss@8.5.32)(rollup@3.30.0)(webpack@5.106.2(@swc/core@1.3.96)(lightningcss@1.33.0)(postcss@8.5.32)))(react@18.3.1)
+      '@open-dy/vibecoding-sdk-taro':
+        specifier: ^0.1.15
+        version: 0.1.15(476f75b03ebdd6450ad56dfaee348108)
       '@tarojs/components':
         specifier: 4.2.0
         version: 4.2.0(@tarojs/helper@4.2.0)(@types/react@18.3.31)(postcss@8.5.32)(rollup@3.30.0)(webpack@5.106.2(@swc/core@1.3.96)(lightningcss@1.33.0)(postcss@8.5.32))
@@ -94,8 +94,8 @@ importers:
         specifier: ^9.18.0
         version: 9.39.5
       '@open-dy/vibecoding-cli':
-        specifier: ^0.1.16
-        version: 0.1.16(@open-dy/vibecoding-sdk-taro@0.1.12(476f75b03ebdd6450ad56dfaee348108))
+        specifier: ^0.1.19
+        version: 0.1.19(@open-dy/vibecoding-sdk-taro@0.1.15(476f75b03ebdd6450ad56dfaee348108))
       '@tailwindcss/postcss':
         specifier: ^4.2.1
         version: 4.3.5
@@ -137,7 +137,7 @@ importers:
         version: 4.4.5(eslint-plugin-import@2.32.0)(eslint@9.39.5(jiti@2.7.0))
       eslint-plugin-import:
         specifier: ^2.31.0
-        version: 2.32.0(eslint-import-resolver-typescript@4.4.5)(eslint@9.39.5(jiti@2.7.0))
+        version: 2.32.0(@typescript-eslint/parser@8.72.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-typescript@4.4.5)(eslint@9.39.5(jiti@2.7.0))
       eslint-plugin-react:
         specifier: ^7.37.0
         version: 7.37.5(eslint@9.39.5(jiti@2.7.0))
@@ -2233,28 +2233,28 @@ packages:
     resolution: {integrity: sha512-5dHGkel+PE/QhGJTZnlOuWxw/gnncoHfgAgWQJJF/je7JKkdCQbSKtv1sZrAmjFK49Hbh7oRoJ44Zx3wkFEmvg==}
     deprecated: This version is deprecated. Please do not use it.
 
-  '@open-dy/lucide-taro@0.1.9':
-    resolution: {integrity: sha512-BvsuvWKKZs0lKuAz9lL1trQHtnCFTYvjsPLs/bwqJ+Xso75FxAJFfuRKwRYsr1aGYoi6ZGcuSCSLEgLAGvocPg==}
+  '@open-dy/lucide-taro@0.1.12':
+    resolution: {integrity: sha512-SuB+t1ItZSe/YRDf6moG3Mc8opq6dnZGO30kk4K0aAHkfh4YHmFmRcgWfftf0oHAZ1lCaZY5LLdAmUqoBqBbtA==}
     hasBin: true
     peerDependencies:
       '@tarojs/components': ^4.2.0
       react: ^18.0.0
 
-  '@open-dy/vibecoding-cli@0.1.16':
-    resolution: {integrity: sha512-bGBaiu7J/etk1m+B/yVVKqvSEuq1MoK6keYId6U25xMIyxQlPgT12XRdJG4SpxqOtZF7odTpaJvZz7mg+8e+DA==}
+  '@open-dy/vibecoding-cli@0.1.19':
+    resolution: {integrity: sha512-l9N67nURibkbOJhCb5IMIoQejTX1OfEJZo29ijVcgzbby9Tm4WjoC/nCRR90DR42IjqOwtACympFo0x7sGiH1Q==}
     engines: {node: '>=18'}
     hasBin: true
     peerDependencies:
-      '@open-dy/vibecoding-sdk-opencard': 0.1.13
-      '@open-dy/vibecoding-sdk-taro': 0.1.12
+      '@open-dy/vibecoding-sdk-opencard': 0.1.16
+      '@open-dy/vibecoding-sdk-taro': 0.1.15
     peerDependenciesMeta:
       '@open-dy/vibecoding-sdk-opencard':
         optional: true
       '@open-dy/vibecoding-sdk-taro':
         optional: true
 
-  '@open-dy/vibecoding-sdk-taro@0.1.12':
-    resolution: {integrity: sha512-lYixV2AY5tzAFM3u6/WbN0HnSUAvnAWR8XOw0TIMOjhptdyG6/W2ENftXkPVoXAvnrDKDm2/X0Ry2E9r1n3iDw==}
+  '@open-dy/vibecoding-sdk-taro@0.1.15':
+    resolution: {integrity: sha512-ux7x7mLh8JJFoWZ/pVGRMdKmkyPIn5m6Z5GzaFEjE6i5/vQ6lM/PDKhW05xA+JrKtnQWq/dlH8CBIc0mNRiH2A==}
     peerDependencies:
       '@babel/generator': ^7.29.0
       '@babel/parser': ^7.29.0
@@ -9289,18 +9289,18 @@ snapshots:
 
   '@open-dy/ai_coding_sdk@1.0.26': {}
 
-  '@open-dy/lucide-taro@0.1.9(@tarojs/components@4.2.0(@tarojs/helper@4.2.0)(@types/react@18.3.31)(postcss@8.5.32)(rollup@3.30.0)(webpack@5.106.2(@swc/core@1.3.96)(lightningcss@1.33.0)(postcss@8.5.32)))(react@18.3.1)':
+  '@open-dy/lucide-taro@0.1.12(@tarojs/components@4.2.0(@tarojs/helper@4.2.0)(@types/react@18.3.31)(postcss@8.5.32)(rollup@3.30.0)(webpack@5.106.2(@swc/core@1.3.96)(lightningcss@1.33.0)(postcss@8.5.32)))(react@18.3.1)':
     dependencies:
       '@tarojs/components': 4.2.0(@tarojs/helper@4.2.0)(@types/react@18.3.31)(postcss@8.5.32)(rollup@3.30.0)(webpack@5.106.2(@swc/core@1.3.96)(lightningcss@1.33.0)(postcss@8.5.32))
       react: 18.3.1
 
-  '@open-dy/vibecoding-cli@0.1.16(@open-dy/vibecoding-sdk-taro@0.1.12(476f75b03ebdd6450ad56dfaee348108))':
+  '@open-dy/vibecoding-cli@0.1.19(@open-dy/vibecoding-sdk-taro@0.1.15(476f75b03ebdd6450ad56dfaee348108))':
     dependencies:
       ajv: 8.20.0
     optionalDependencies:
-      '@open-dy/vibecoding-sdk-taro': 0.1.12(476f75b03ebdd6450ad56dfaee348108)
+      '@open-dy/vibecoding-sdk-taro': 0.1.15(476f75b03ebdd6450ad56dfaee348108)
 
-  '@open-dy/vibecoding-sdk-taro@0.1.12(476f75b03ebdd6450ad56dfaee348108)':
+  '@open-dy/vibecoding-sdk-taro@0.1.15(476f75b03ebdd6450ad56dfaee348108)':
     dependencies:
       '@babel/generator': 7.29.13
       '@babel/parser': 7.29.13
@@ -9316,7 +9316,7 @@ snapshots:
       class-variance-authority: 0.7.1
       clsx: 2.1.1
       eslint: 9.39.5(jiti@2.7.0)
-      eslint-plugin-import: 2.32.0(eslint-import-resolver-typescript@4.4.5)(eslint@9.39.5(jiti@2.7.0))
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.72.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-typescript@4.4.5)(eslint@9.39.5(jiti@2.7.0))
       eslint-plugin-react: 7.37.5(eslint@9.39.5(jiti@2.7.0))
       eslint-plugin-react-hooks: 5.2.0(eslint@9.39.5(jiti@2.7.0))
       globals: 16.5.0
@@ -11696,21 +11696,22 @@ snapshots:
       tinyglobby: 0.2.17
       unrs-resolver: 1.13.0
     optionalDependencies:
-      eslint-plugin-import: 2.32.0(eslint-import-resolver-typescript@4.4.5)(eslint@9.39.5(jiti@2.7.0))
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.72.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-typescript@4.4.5)(eslint@9.39.5(jiti@2.7.0))
     transitivePeerDependencies:
       - supports-color
 
-  eslint-module-utils@2.14.0(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@4.4.5)(eslint@9.39.5(jiti@2.7.0)):
+  eslint-module-utils@2.14.0(@typescript-eslint/parser@8.72.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@4.4.5)(eslint@9.39.5(jiti@2.7.0)):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
+      '@typescript-eslint/parser': 8.72.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint: 9.39.5(jiti@2.7.0)
       eslint-import-resolver-node: 0.3.10
       eslint-import-resolver-typescript: 4.4.5(eslint-plugin-import@2.32.0)(eslint@9.39.5(jiti@2.7.0))
     transitivePeerDependencies:
       - supports-color
 
-  eslint-plugin-import@2.32.0(eslint-import-resolver-typescript@4.4.5)(eslint@9.39.5(jiti@2.7.0)):
+  eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.72.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-typescript@4.4.5)(eslint@9.39.5(jiti@2.7.0)):
     dependencies:
       '@rtsao/scc': 1.1.0
       array-includes: 3.2.0
@@ -11721,7 +11722,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 9.39.5(jiti@2.7.0)
       eslint-import-resolver-node: 0.3.10
-      eslint-module-utils: 2.14.0(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@4.4.5)(eslint@9.39.5(jiti@2.7.0))
+      eslint-module-utils: 2.14.0(@typescript-eslint/parser@8.72.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@4.4.5)(eslint@9.39.5(jiti@2.7.0))
       hasown: 2.0.4
       is-core-module: 2.18.0
       is-glob: 4.0.3
@@ -11732,6 +11733,8 @@ snapshots:
       semver: 6.3.2
       string.prototype.trimend: 1.0.10
       tsconfig-paths: 3.15.0
+    optionalDependencies:
+      '@typescript-eslint/parser': 8.72.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
     transitivePeerDependencies:
       - eslint-import-resolver-typescript
       - eslint-import-resolver-webpack
@@ -12746,7 +12749,7 @@ snapshots:
 
   jest-worker@27.5.1:
     dependencies:
-      '@types/node': 22.20.5
+      '@types/node': 18.19.130
       merge-stream: 2.0.0
       supports-color: 8.1.1
 

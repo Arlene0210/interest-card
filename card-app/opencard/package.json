@@ -12,26 +12,26 @@
     "lint": "vibecoding-interest-card lint"
   },
   "dependencies": {
-    "@open-dy/vibecoding-sdk-opencard": "^0.1.13",
+    "@open-dy/vibecoding-sdk-opencard": "^0.1.16",
     "@vitejs/plugin-react": "^4.3.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.8.0",
-    "@babel/preset-react": "^7.28.5",
     "@babel/generator": "^7.29.1",
     "@babel/parser": "^7.29.1",
+    "@babel/preset-react": "^7.28.5",
     "@babel/traverse": "^7.29.0",
     "@babel/types": "^7.29.0",
     "@eslint/js": "^9.18.0",
+    "@open-dy/vibecoding-cli": "^0.1.19",
     "@types/node": "^18.15.11",
     "@types/react": "^18.0.0",
     "eslint": "^9.18.0",
-    "typescript": "^5.9.3",
     "turbo": "^2.9.9",
-    "typescript-eslint": "^8.20.0",
-    "@open-dy/vibecoding-cli": "^0.1.16"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.20.0"
   },
   "packageManager": "pnpm@10.4.1"
 }
