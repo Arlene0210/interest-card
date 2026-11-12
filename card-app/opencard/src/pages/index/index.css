@@ -245,6 +245,61 @@
   z-index: 0;
 }
 
+/* 白蜡膜层（外层白壳）：大豆蜡+白蜂蜡的乳白半透明外壳，任何颜色都罩在外侧
+   不透明度由 TSX 内联（WAX_FILM_OPACITY）；高光偏移让蜡膜呈现轻微厚度感
+   （被父容器 overflow hidden + 圆角裁切，无需自带圆角） */
+.squishy-wax-film {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+      160deg,
+      rgba(255, 253, 246, 0.88) 0%,
+      rgba(255, 250, 242, 0.5) 34%,
+      rgba(252, 246, 236, 0.34) 60%,
+      rgba(248, 240, 228, 0.54) 100%
+    ),
+    radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 50%),
+    radial-gradient(circle at 68% 74%, rgba(250, 245, 235, 0.4) 0%, rgba(250, 245, 235, 0) 42%);
+  box-shadow:
+    inset 0 -1.6vh 2.6vh rgba(214, 196, 168, 0.28),
+    inset 0 1vh 1.6vh rgba(255, 255, 255, 0.85);
+  z-index: 1;
+}
+
+/* 蜡面粉霜颗粒（在蜡膜之上）：大豆蜡冷凝后的哑光霜感——细小白点轻覆表面，
+   让蜡皮呈现真实的颗粒质感而非光滑塑料感；不重叠高光区避免糊白 */
+.squishy-wax-frost {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(circle at 22% 58%, rgba(255, 253, 245, 0.5) 0%, rgba(255, 253, 245, 0) 9%),
+    radial-gradient(circle at 76% 30%, rgba(255, 252, 242, 0.42) 0%, rgba(255, 252, 242, 0) 8%),
+    radial-gradient(circle at 58% 82%, rgba(252, 248, 238, 0.45) 0%, rgba(252, 248, 238, 0) 10%),
+    radial-gradient(circle at 40% 40%, rgba(255, 255, 250, 0.32) 0%, rgba(255, 255, 250, 0) 7%);
+  opacity: 0.6;
+  z-index: 1;
+}
+
+/* 蜡面高光（在蜡膜之上） */
+.squishy-highlight {
+  z-index: 2;
+}
+
+/* 粘土凹陷在蜡膜之上 */
+.squishy-dent-group {
+  z-index: 2;
+}
+
+.squishy-dent {
+  z-index: 2;
+}
+
 /* 绝对定位的堆叠球（非首只）：宽度由 TSX 内联统一给值（Lynx 无 auto 收缩） */
 .squishy-ball.is-stacked {
   position: absolute;
@@ -263,10 +318,11 @@
 
 /* ---------- 耳朵 / 头顶装饰结构件 ---------- */
 
-/* 装饰件基础（顶部左右对开定位） */
+/* 装饰件基础（顶部左右对开定位；压在白蜡膜之上保持彩色蜡件观感） */
 .squishy-ear {
   position: absolute;
   box-sizing: border-box;
+  z-index: 2;
 }
 
 .squishy-ear-left {
@@ -434,8 +490,84 @@
   border-radius: 50%;
   background: radial-gradient(
     ellipse at center,
-    rgba(150, 110, 95, 0.3) 0%,
-    rgba(150, 110, 95, 0) 72%
+    rgba(130, 82, 52, 0.52) 0%,
+    rgba(130, 82, 52, 0.3) 48%,
+    rgba(130, 82, 52, 0) 74%
+  );
+}
+
+/* 粘土主凹陷组：捏的位置——深色凹陷坑（内陷阴影）+ 下缘受光隆起唇（陶土被压出的凸起）
+   scale/opacity 由 TSX 内联按力度控制；松手后按峰值保留（陶土记忆） */
+.squishy-dent-group {
+  position: absolute;
+  left: 22%;
+  top: 26%;
+  width: 52%;
+  height: 46%;
+  z-index: 2;
+}
+
+.squishy-dent-pit {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 52% 48% 50% 50% / 58% 58% 44% 44%;
+  background: radial-gradient(
+    ellipse at 44% 34%,
+    rgba(66, 34, 12, 0.94) 0%,
+    rgba(66, 34, 12, 0.66) 30%,
+    rgba(66, 34, 12, 0.24) 52%,
+    rgba(66, 34, 12, 0) 62%
+  );
+  box-shadow:
+    inset 0 1.4vh 2.2vh rgba(52, 26, 8, 0.66),
+    inset 0 -0.4vh 0.8vh rgba(255, 250, 238, 0.34);
+}
+
+/* 深捏态：坑底更黑更集中（满力按压的深坑），坑口阴影圈同步加深 */
+.squishy-dent-group.is-deep .squishy-dent-pit {
+  background: radial-gradient(
+    ellipse at 44% 34%,
+    rgba(40, 18, 4, 0.97) 0%,
+    rgba(46, 22, 6, 0.8) 26%,
+    rgba(56, 28, 10, 0.34) 48%,
+    rgba(66, 34, 12, 0) 58%
+  );
+  box-shadow:
+    inset 0 1.6vh 2.6vh rgba(38, 18, 4, 0.76),
+    inset 0 -0.4vh 0.8vh rgba(255, 250, 238, 0.4);
+}
+
+/* 凹坑上缘受光弧：粘土被压入时坑口上缘反光（与下缘亮唇构成夹击，坑更立体） */
+.squishy-dent-edge {
+  position: absolute;
+  left: 6%;
+  top: -8%;
+  width: 88%;
+  height: 26%;
+  border-radius: 50%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 253, 244, 0.7) 0%,
+    rgba(255, 253, 244, 0.22) 55%,
+    rgba(255, 253, 244, 0) 100%
+  );
+}
+
+.squishy-dent-rim {
+  position: absolute;
+  left: 4%;
+  top: 57%;
+  width: 92%;
+  height: 34%;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 251, 236, 1) 0%,
+    rgba(255, 251, 236, 0.45) 40%,
+    rgba(255, 251, 236, 0) 62%
   );
 }
 
@@ -472,6 +604,7 @@
   height: 38%;
   border-radius: 50%;
   box-shadow: inset 0 -0.8vh 1.6vh rgba(0, 0, 0, 0.18);
+  z-index: 3;
 }
 
 /* 捏爆中：馅团涌出时带果冻式流动脉冲（多段黏稠涌动，重力下垂，无回缩） */
@@ -509,19 +642,22 @@
   left: 0;
   width: 100%;
   height: 100%;
+  z-index: 4;
 }
 
 .squishy-crack {
   position: absolute;
-  height: 3.5px;
+  height: 5.5px;
   border-radius: 999px;
   background: linear-gradient(
     90deg,
-    rgba(130, 118, 100, 0.12) 0%,
-    rgba(130, 118, 100, 0.8) 45%,
-    rgba(130, 118, 100, 0.12) 100%
+    rgba(74, 46, 22, 0.16) 0%,
+    rgba(66, 38, 16, 0.95) 45%,
+    rgba(74, 46, 22, 0.16) 100%
   );
-  box-shadow: 0 0.5px 1px rgba(255, 255, 255, 0.32);
+  box-shadow:
+    0 1px 1.5px rgba(255, 252, 240, 0.45),
+    0 2px 3.5px rgba(60, 30, 10, 0.4);
 }
 
 .squishy-crack-1 {
@@ -535,7 +671,7 @@
   left: 40%;
   top: 14%;
   width: 26%;
-  height: 2.5px;
+  height: 3.5px;
   transform: rotate(-32deg);
 }
 
@@ -551,7 +687,7 @@
   left: 50%;
   top: 20%;
   width: 30%;
-  height: 2.5px;
+  height: 3.5px;
   transform: rotate(72deg);
 }
 
@@ -559,7 +695,7 @@
   left: 18%;
   top: 58%;
   width: 28%;
-  height: 2.5px;
+  height: 3.5px;
   transform: rotate(48deg);
 }
 
@@ -567,8 +703,26 @@
   left: 52%;
   top: 58%;
   width: 26%;
-  height: 2.5px;
+  height: 3.5px;
   transform: rotate(-58deg);
+}
+
+/* 裂纹分叉细屑（7-8：主裂缝旁斜出的短细线，脆壳裂纹的不规则分叉感）
+   颜色继承 .squishy-crack，更细更短，随主裂纹一起浮现 */
+.squishy-crack-7 {
+  left: 30%;
+  top: 36%;
+  width: 14%;
+  height: 2.5px;
+  transform: rotate(-46deg);
+}
+
+.squishy-crack-8 {
+  left: 58%;
+  top: 40%;
+  width: 12%;
+  height: 2.5px;
+  transform: rotate(118deg);
 }
 
 /* 顶部破口翻皮：捏爆时裂口两片蜡皮翘起（颜色由 TSX 内联提供：泛白蜡壳色） */
@@ -874,61 +1028,164 @@
   left: 0;
   width: 100%;
   height: 100%;
+  z-index: 5;
 }
 
-/* 裂口折线：偏右的主裂口（深色裂边，粗线醒目） */
+/* 裂口折线：偏右的主裂口（深色裂边，粗线醒目；蜡壳撕裂的不规则锯齿边） */
 .squishy-remnant-cleft-line {
   position: absolute;
   border-radius: 999px;
   background: linear-gradient(
     90deg,
-    rgba(120, 105, 88, 0.06) 0%,
-    rgba(120, 105, 88, 0.85) 50%,
-    rgba(120, 105, 88, 0.06) 100%
+    rgba(74, 46, 22, 0.1) 0%,
+    rgba(74, 46, 22, 0.92) 50%,
+    rgba(74, 46, 22, 0.1) 100%
   );
-  box-shadow: 0 1px 2px rgba(255, 255, 255, 0.35);
+  box-shadow:
+    0 1px 2px rgba(255, 252, 240, 0.4),
+    0 2px 6px rgba(60, 30, 10, 0.42);
 }
 
 .squishy-remnant-cleft-line-1 {
-  left: 46%;
-  top: 6%;
-  width: 46%;
-  height: 6px;
+  left: 44%;
+  top: 5%;
+  width: 50%;
+  height: 8px;
   transform: rotate(-30deg);
 }
 
 .squishy-remnant-cleft-line-2 {
-  left: 60%;
-  top: 24%;
-  width: 30%;
-  height: 5px;
+  left: 58%;
+  top: 22%;
+  width: 34%;
+  height: 7px;
   transform: rotate(50deg);
 }
 
-/* 裂口翻起的薄蜡皮残片（偏侧，常驻，加大） */
+/* 裂口锯齿细毛边：主裂口边缘的小缺口（脆壳撕裂的不规则边，替代光滑直线） */
+.squishy-remnant-cleft-nick {
+  position: absolute;
+  border-radius: 3px 5px 2px 6px;
+  background: rgba(70, 42, 20, 0.72);
+  box-shadow: 0 1px 1.5px rgba(255, 250, 236, 0.3);
+}
+
+.squishy-remnant-cleft-nick-0 {
+  left: 48%;
+  top: 9%;
+  width: 7%;
+  height: 5%;
+  transform: rotate(38deg);
+}
+
+.squishy-remnant-cleft-nick-1 {
+  left: 70%;
+  top: 13%;
+  width: 5%;
+  height: 4%;
+  transform: rotate(-18deg);
+}
+
+.squishy-remnant-cleft-nick-2 {
+  left: 62%;
+  top: 30%;
+  width: 6%;
+  height: 4%;
+  transform: rotate(62deg);
+}
+
+/* 裂口翻起的薄蜡皮残片（偏侧，常驻，加大；不规则破边 + 卷边厚度 + 深影） */
 .squishy-remnant-cleft-lip {
   position: absolute;
-  background: rgba(255, 252, 244, 0.95);
+  background: rgba(255, 252, 244, 0.96);
   border-radius: 5px 10px 4px 9px;
   box-shadow:
-    inset 0 -3px 4px rgba(150, 140, 120, 0.35),
+    inset 0 -4px 5px rgba(150, 140, 120, 0.45),
     inset 0 2px 3px rgba(255, 255, 255, 0.75),
-    0 1.5px 3px rgba(22, 24, 35, 0.2);
+    inset 0 0 0 2px rgba(240, 232, 216, 0.4),
+    0 3px 6px rgba(22, 24, 35, 0.34),
+    0 -1px 4px rgba(120, 70, 40, 0.3);
 }
 
 .squishy-remnant-cleft-lip-l {
-  left: 36%;
-  top: 6%;
-  width: 24%;
-  height: 20%;
+  left: 34%;
+  top: 4%;
+  width: 27%;
+  height: 23%;
   transform: rotate(-56deg) translate(-8%, -20%);
 }
 
-.squishy-remnant-cleft-lip-r {
+/* 残体周边粘土/蜡屑（小碎屑，常驻） */
+.squishy-remnant-crumb {
+  position: absolute;
+  border-radius: 55% 45% 60% 40% / 50% 55% 45% 60%;
+  box-shadow:
+    inset 0 -1px 2px rgba(120, 70, 40, 0.3),
+    0 1px 2px rgba(22, 24, 35, 0.22);
+}
+
+.squishy-remnant-crumb-0 {
+  left: 16%;
+  top: 34%;
+  width: 9%;
+  height: 8%;
+  transform: rotate(-24deg);
+}
+
+.squishy-remnant-crumb-1 {
+  left: 74%;
+  top: 20%;
+  width: 8%;
+  height: 7%;
+  transform: rotate(38deg);
+}
+
+.squishy-remnant-crumb-2 {
   left: 64%;
-  top: 16%;
-  width: 18%;
-  height: 15%;
+  top: 58%;
+  width: 7%;
+  height: 6%;
+  transform: rotate(12deg);
+}
+
+.squishy-remnant-crumb-3 {
+  left: 26%;
+  top: 70%;
+  width: 8%;
+  height: 7%;
+  transform: rotate(-44deg);
+}
+
+/* 追加碎屑 4-6：更小更散，部分挂在裂口边缘（蜡壳崩裂时溅出的细屑） */
+.squishy-remnant-crumb-4 {
+  left: 46%;
+  top: 12%;
+  width: 6%;
+  height: 5%;
+  transform: rotate(66deg);
+}
+
+.squishy-remnant-crumb-5 {
+  left: 84%;
+  top: 46%;
+  width: 7%;
+  height: 6%;
+  transform: rotate(-12deg);
+}
+
+.squishy-remnant-crumb-6 {
+  left: 12%;
+  top: 56%;
+  width: 5%;
+  height: 5%;
+  transform: rotate(30deg);
+}
+
+.squishy-remnant-cleft-lip-r {
+  left: 62%;
+  top: 14%;
+  width: 21%;
+  height: 17%;
   transform: rotate(48deg);
 }
 
@@ -1668,59 +1925,60 @@
 
 /* ---------- 裂缝渗馅/泵浆（与按压同步，无回弹，流动质感） ---------- */
 
-/* 渗馅泉眼容器（挂在球体内，随球体一起形变） */
+/* 渗馅泉眼容器（挂在球体内，随球体一起形变；压在蜡膜上） */
 .squishy-ooze-wrap {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 3;
+  z-index: 5;
 }
 
 /* 单处泉眼：位置对应 6 条裂缝口；常态透明，渗馅态由 is-seep 渐显，捏爆态由 is-burst 泵出 */
 .squishy-ooze {
   position: absolute;
-  width: 22%;
-  height: 16%;
+  width: 30%;
+  height: 21%;
   border-radius: 52% 48% 55% 45% / 58% 52% 48% 42%;
   box-shadow:
-    inset 0 -2px 4px rgba(0, 0, 0, 0.18),
-    inset 0 2px 3px rgba(255, 255, 255, 0.4);
+    inset 0 -2px 4px rgba(0, 0, 0, 0.22),
+    inset 0 2px 3px rgba(255, 255, 255, 0.42),
+    0 1px 2px rgba(60, 30, 10, 0.18);
   opacity: 0;
   transform: scale(0.3);
   transition: opacity 0.25s ease-out, transform 0.25s ease-out;
 }
 
-/* 各泉眼位置与六条裂缝口对应（略偏裂缝端点，湿润堆积感） */
+/* 各泉眼位置锚定裂缝线心（left/top 为块左上角：线心坐标 -15%/-10.5%），馅从裂口冒出 */
 .squishy-ooze-0 {
-  left: 30%;
-  top: 26%;
+  left: 29%;
+  top: 16.5%;
 }
 
 .squishy-ooze-1 {
-  left: 46%;
-  top: 15%;
+  left: 38%;
+  top: 2%;
 }
 
 .squishy-ooze-2 {
-  left: 24%;
-  top: 46%;
+  left: 27%;
+  top: 32.5%;
 }
 
 .squishy-ooze-3 {
-  left: 52%;
-  top: 21%;
+  left: 40%;
+  top: 23.5%;
 }
 
 .squishy-ooze-4 {
-  left: 18%;
-  top: 60%;
+  left: 12%;
+  top: 57.5%;
 }
 
 .squishy-ooze-5 {
-  left: 54%;
-  top: 60%;
+  left: 44%;
+  top: 42.5%;
 }
 
 /* 捏爆态：从裂缝口流动涌出（鼓胀 → 摊开 → 重力下垂拉长，黏稠挂壁，无回缩） */

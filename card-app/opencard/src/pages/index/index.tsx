@@ -30,6 +30,8 @@ const STACK_MAX = 100;
 const SOUND_SAMPLE_MAX = 12;
 /** 裂纹浮现的最低力度（%） */
 const CRACK_MIN_POWER = 60;
+/** 深捏加深开始的力度（%）：此力度以上凹坑/裂纹额外加深加粗（粘土被真正压到深处） */
+const DEEP_PRESS_POWER = 75;
 /** 三处凹陷依次出现的力度阈值（%） */
 const DENT_STEPS = [30, 60, 90];
 /** 数量越界提示时长（ms） */
@@ -40,8 +42,10 @@ const STEP_HOLD_DELAY_MS = 450;
 const STEP_HOLD_INTERVAL_MS = 110;
 /** 长按步进连发步长 */
 const STEP_HOLD_BATCH = 5;
-/** 蜡皮混白比例：主体色 → 泛白蜡壳 */
-const WAX_MIX_RATIO = 0.62;
+/** 蜡皮混白比例：主体色 → 泛白蜡壳（外层白蜡膜的浓度） */
+const WAX_MIX_RATIO = 0.55;
+/** 蜡皮膜不透明度（白蜂蜡+大豆蜡的乳白半透明感） */
+const WAX_FILM_OPACITY = 0.52;
 
 /** 松手反馈对象 */
 interface PressFeedback {
@@ -229,6 +233,7 @@ export default function IndexPage() {
   const [bursting, setBursting] = useState(false); // 爆裂动画中
   const [burstShaped, setBurstShaped] = useState(false); // 捏爆后破相残体（换新前保持）
   const [seepSettled, setSeepSettled] = useState(0); // 松手后裂缝渗馅程度（0-1，按本次按压峰值力度换算）
+  const [dentSettled, setDentSettled] = useState(0); // 松手后粘土指印保留程度（0-1，按本次按压峰值力度换算）
   const [selPreset, setSelPreset] = useState<string>(""); // DIY 选中形象预设（空=自定义）
   const [selShape, setSelShape] = useState<string>("round"); // DIY 身体形状
   const [selEar, setSelEar] = useState<string>("none"); // DIY 耳朵
@@ -253,6 +258,7 @@ export default function IndexPage() {
   const powerRef = useRef(0);
   const pressingRef = useRef(false);
   const seepLatchRef = useRef(0); // 本次按压峰值力度（渗馅残留依据）
+  const soundLatchCrackRef = useRef(0); // 本次按压已播过实时脆裂音的力度阈值（防重复播）
   const stackCountRef = useRef(1);
   const stackHintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // 长按步进计时器（−/+ 按钮）
@@ -372,50 +378,54 @@ export default function IndexPage() {
     currentToyRef.current = activeToy ?? null;
   }, [activeToy]);
 
-  /** 播放一次捏压音效（可指定播放速率） */
-  const playSqueezeOnce = useCallback((rate: number) => {
-    const taro = taroApiRef.current;
-    if (!taro) return;
-    try {
-      const audio = taro.createInnerAudioContext();
-      audio.src = "https://lf-aihub.douyinvod.com/obj/developer/card_7706443532244896531_ext/c9d6699ae1a4.mp3";
-      audio.playbackRate = rate;
-      let destroyed = false;
-      const destroyAudio = () => {
-        if (destroyed) return;
-        destroyed = true;
-        try {
-          audio.destroy();
-        } catch (destroyError) {
-          console.error("[squishy] destroy audio failed", destroyError);
-        }
-      };
-      audio.onError((err: unknown) => {
-        console.error("[squishy] squeeze sound failed", err);
-        destroyAudio();
-      });
-      audio.onEnded(() => {
-        destroyAudio();
-      });
-      audio.play();
-      // 兜底释放：若事件未触发，2.5s 后回收
-      setTimeout(destroyAudio, 2500);
-    } catch (error) {
-      console.error("[squishy] create audio context failed", error);
-    }
-  }, []);
+/** 捏压音效源（按真实脆皮捏捏材料合成）：蜡皮脆裂（大豆蜡+蜂蜡壳）/ 蜡壳崩裂（捏爆）/ 内馅湿陷（超轻粘土+甘油+珍珠岩） */
+const SFX_WAX_CRACK = "https://lf-aihub.douyinvod.com/obj/developer/card_7706443532244896531_ext/5e120e6e715c.mp3";
+const SFX_WAX_BURST = "https://lf-aihub.douyinvod.com/obj/developer/card_7706443532244896531_ext/d8dd7c39eadf.mp3";
+const SFX_CLAY_SQUISH = "https://lf-aihub.douyinvod.com/obj/developer/card_7706443532244896531_ext/ba1d5358112c.mp3";
+
+/** 播放一次指定音效（可指定播放速率与音量） */
+const playSfxOnce = (taro: openCardTaro | null, src: string, rate: number, volume: number) => {
+  if (!taro) return;
+  try {
+    const audio = taro.createInnerAudioContext();
+    audio.src = src;
+    audio.playbackRate = rate;
+    audio.volume = volume;
+    let destroyed = false;
+    const destroyAudio = () => {
+      if (destroyed) return;
+      destroyed = true;
+      try {
+        audio.destroy();
+      } catch (destroyError) {
+        console.error("[squishy] destroy audio failed", destroyError);
+      }
+    };
+    audio.onError((err: unknown) => {
+      console.error("[squishy] squeeze sound failed", err);
+      destroyAudio();
+    });
+    audio.onEnded(() => {
+      destroyAudio();
+    });
+    audio.play();
+    // 兜底释放：若事件未触发，2.5s 后回收
+    setTimeout(destroyAudio, 2500);
+  } catch (error) {
+    console.error("[squishy] create audio context failed", error);
+  }
+};
 
   /**
-   * 播放捏压音效 + 触觉反馈（真实脆皮节奏）。
-   * 档位决定节奏：轻捏 1 声、用力捏 2 连、捏爆「先脆后闷」双段（间隔约 70ms）。
+   * 播放捏压音效 + 触觉反馈（真实脆皮捏捏双层声学）。
+   * 轻捏 = 纯内馅湿陷（闷、软）；用力捏 = 蜡皮脆裂 + 内馅湿陷；捏爆 = 蜡壳崩裂 + 大口湿陷。
    * 叠捏按只数密集连播（间隔 40-90ms、速率缓升封顶 2.2），超过抽样上限按比例抽样。
    */
   const playSqueezeFeedback = useCallback(
     (level: SqueezeLevel | null) => {
       if (!soundOnRef.current) return;
-      const baseRate = level && level.min >= 70 ? 1.7 : level && level.min >= 35 ? 1.35 : 1.05;
-      const playsPerToy = level && level.min >= 35 ? 2 : 1;
-      const burstGapMs = 70; // 捏爆「外壳碎裂 + 爆浆扑哧」双段间隔
+      const isBurst = !!level && level.min >= 70;
+      const isHard = !!level && level.min >= 35;
       const count = stackCountRef.current;
       // 抽样：大数量时只播满 SOUND_SAMPLE_MAX 只的密集节奏，避免 100 只音频风暴
       const playedCount = Math.min(count, SOUND_SAMPLE_MAX);
@@ -423,19 +433,30 @@ export default function IndexPage() {
       const gap = Math.max(40, STACK_SOUND_GAP_MS - Math.min(50, playedCount * 4));
       soundTimersRef.current.forEach((timer) => clearTimeout(timer));
       soundTimersRef.current = [];
+      const schedule = (src: string, rate: number, volume: number, at: number) => {
+        if (at <= 0) {
+          playSfxOnce(taroApiRef.current, src, rate, volume);
+        } else {
+          const timer = setTimeout(() => {
+            playSfxOnce(taroApiRef.current, src, rate, volume);
+          }, at);
+          soundTimersRef.current.push(timer);
+        }
+      };
       for (let i = 0; i < playedCount; i += 1) {
-        const rate = Math.min(2.2, baseRate * (1 + i * 0.08));
-        for (let seg = 0; seg < playsPerToy; seg += 1) {
-          const segRate = seg === 0 ? rate : Math.max(1, rate * 0.55); // 第二段更闷（爆浆扑哧）
-          const at = i * gap + seg * burstGapMs;
-          if (at <= 0) {
-            playSqueezeOnce(segRate);
-          } else {
-            const timer = setTimeout(() => {
-              playSqueezeOnce(segRate);
-            }, at);
-            soundTimersRef.current.push(timer);
-          }
+        const rate = Math.min(2.2, (isBurst ? 1.15 : isHard ? 1.05 : 0.92) * (1 + i * 0.08));
+        const at = i * gap;
+        if (isBurst) {
+          // 捏爆：蜡壳崩裂为主 + 0.22s 后内馅大口湿陷
+          schedule(SFX_WAX_BURST, rate, 1, at);
+          schedule(SFX_CLAY_SQUISH, Math.min(2.2, rate * 1.12), 0.9, at + 220);
+        } else if (isHard) {
+          // 用力捏：脆裂 + 0.085s 后湿陷
+          schedule(SFX_WAX_CRACK, rate, 0.9, at);
+          schedule(SFX_CLAY_SQUISH, rate, 1, at + 85);
+        } else {
+          // 轻捏：只有内馅闷湿陷
+          schedule(SFX_CLAY_SQUISH, rate, 0.75, at);
         }
       }
       // 轻震动反馈（当前运行环境仅支持 vibrateShort，统一轻震动，叠捏保持单次）
@@ -448,7 +469,7 @@ export default function IndexPage() {
         }
       }
     },
-    [playSqueezeOnce],
+    [],
   );
 
   /** 真实上报捏压记录（写库语义，仅返回成功标志，不返回渲染字段） */
@@ -505,7 +526,9 @@ export default function IndexPage() {
     cancelBurst();
     setBurstShaped(false);
     setSeepSettled(0);
+    setDentSettled(0);
     seepLatchRef.current = 0;
+    soundLatchCrackRef.current = 0;
   }, [cancelBurst]);
 
   /** 开始按压 */
@@ -515,9 +538,15 @@ export default function IndexPage() {
     setPressing(true);
     setSqueezed(false);
     setFeedback(null);
+    seepLatchRef.current = 0; // 新一次按压峰值从零开始
+    soundLatchCrackRef.current = 0; // 实时脆裂音闩锁复位
     if (feedbackTimerRef.current) {
       clearTimeout(feedbackTimerRef.current);
       feedbackTimerRef.current = null;
+    }
+    // 起手一声内馅闷陷（粘土内馅被指头压住的软声）
+    if (soundOnRef.current) {
+      playSfxOnce(taroApiRef.current, SFX_CLAY_SQUISH, 0.85, 0.35);
     }
     // 力度随按住时长增长
     if (powerTimerRef.current) clearInterval(powerTimerRef.current);
@@ -529,6 +558,16 @@ export default function IndexPage() {
       setPower(next);
       if (next > seepLatchRef.current) {
         seepLatchRef.current = next; // 记录峰值：松手后裂缝渗馅按峰值保留
+      }
+      // 实时脆裂反馈：力度首次跨过用力捏阈值（35%）→ 一声蜡裂；跨过裂纹阈值（60%）→ 一声更脆的崩裂
+      if (soundOnRef.current) {
+        if (seepLatchRef.current >= CRACK_MIN_POWER && soundLatchCrackRef.current < CRACK_MIN_POWER) {
+          soundLatchCrackRef.current = CRACK_MIN_POWER;
+          playSfxOnce(taroApiRef.current, SFX_WAX_CRACK, 1.25, 0.5);
+        } else if (seepLatchRef.current >= 35 && soundLatchCrackRef.current < 35) {
+          soundLatchCrackRef.current = 35;
+          playSfxOnce(taroApiRef.current, SFX_WAX_CRACK, 0.95, 0.32);
+        }
       }
       if (next >= 100 && powerTimerRef.current) {
         clearInterval(powerTimerRef.current);
@@ -548,8 +587,10 @@ export default function IndexPage() {
     }
     const finalPower = powerRef.current;
     setPressing(false);
-    setSqueezed(true); // 不回弹：形状保持凹陷
+    setSqueezed(true); // 不回弹：凹陷/裂纹/渗馅按峰值保留（陶土记忆）
     setSeepSettled(Math.min(1, Math.max(0, (finalPower - CRACK_MIN_POWER) / (100 - CRACK_MIN_POWER))));
+    setDentSettled(Math.min(1, finalPower / 100)); // 粘土指印：按本次力度保留
+    soundLatchCrackRef.current = 0; // 实时脆裂音复位（下一次按压重新播）
     setPower(0);
     powerRef.current = 0;
     const level = matchLevel(finalPower, levels);
@@ -790,44 +831,44 @@ export default function IndexPage() {
   // DIY 弹层开启时 Footer 不渲染（避免与弹层重叠交互）
   const showFooter = !!cardData && !diyOpen;
 
-  // 形变几何值（JS 计算，动态内联）：按住时随力度压扁；松手后保持凹陷；
-  // 捏爆 = 塌陷随爆浆单调加深（0.7 → 0.46 → 0.42，一次塌到位绝不向上回弹）；残体保持破相
+  // 形变几何值（JS 计算，动态内联）：粘土材质——按压以「局部凹陷」为主，整体只轻微紧绷不整球压扁；
+  // 松手后形体基本回位、凹陷保留（陶土记忆）；捏爆仍是整体塌陷（0.7 → 0.46 → 0.42，一次塌到位绝不向上回弹）
   const squishScaleX = bursting
     ? 1.26
     : burstShaped
       ? 1.3
       : pressing
-        ? 1 + 0.14 * (power / 100)
+        ? 1 + 0.05 * (power / 100)
         : squeezed
-          ? 1.06
+          ? 1.02
           : 1;
   const squishScaleY = bursting
     ? 0.46
     : burstShaped
       ? 0.42
       : pressing
-        ? 1 - 0.3 * (power / 100)
+        ? 1 - 0.1 * (power / 100)
         : squeezed
-          ? 0.78
+          ? 0.97
           : 1;
   const squishScale = `scaleX(${squishScaleX.toFixed(3)}) scaleY(${squishScaleY.toFixed(3)})`;
-  // 基础捏痕透明度：按压中随力度加深；松手后保持
-  const dentOpacity = pressing ? Math.min(0.9, 0.25 + 0.75 * (power / 100)) : squeezed ? 0.9 : 0;
-  // 三处凹陷点随力度依次显现
+  // 粘土主凹陷（捏的位置）：力度越深凹陷越大越深；松手后按本次峰值保留指印
+  const effectivePower = pressing ? Math.max(power, dentSettled * 100) : dentSettled * 100;
+  const dentDepth = Math.min(1, effectivePower / 100);
+  // 深捏加重（≥75% 力度）：凹坑明显更大更深（粘土被真正压到深处）
+  const deepBoost = Math.min(1, Math.max(0, (effectivePower - DEEP_PRESS_POWER) / 25));
+  const dentGroupOpacity = 0.34 + 0.66 * dentDepth;
+  // 满力深捏时凹陷明显扩大加深（真实粘土被拇指压出的深坑），轻捏只留浅印
+  const dentGroupScale = 0.64 + 0.7 * dentDepth + 0.14 * deepBoost;
+  // 三处次级压痕随力度依次显现（松手后按峰值保留）
   const stepOpacities = DENT_STEPS.map((step, index) => {
-    if (squeezed && !pressing) return 1;
-    if (!pressing) return 0;
     const span = index === DENT_STEPS.length - 1 ? 10 : 20;
-    return Math.min(1, Math.max(0, (power - step) / span + 0.4));
+    return Math.min(1, Math.max(0, (effectivePower - step) / span + 0.4));
   });
-  // 裂纹透明度：力度 ≥60% 浮现并随力度上升；捏爆后常驻（真实爆浆：6 条放射裂缝）
+  // 蜡皮裂纹：力度 ≥60% 浮现并随力度上升；松手/捏爆后按峰值保留（蜡裂不可逆）
   const crackOpacity = bursting
     ? 0.95
-    : pressing
-      ? Math.min(0.85, Math.max(0, (power - CRACK_MIN_POWER) / 50))
-      : squeezed
-        ? 0.6
-        : 0;
+    : Math.min(0.95, Math.max(0, (effectivePower - CRACK_MIN_POWER) / 40));
   // 爆浆内馅色：当前玩具（预设或 DIY）的内馅决定；无馅捏爆也爆出米白内瓤（真实脆皮都有白瓤）
   const activeToyFillingId = activeToy?.fillingId ?? "none";
   const activeFilling = diy?.fillings?.find((item) => item.id === activeToyFillingId);
@@ -842,7 +883,7 @@ export default function IndexPage() {
     : `translate(-50%, -50%) scale(${burstShaped ? 1.45 : 1}) translate(${burstShaped ? "5%, -8%" : "0, 0"})`;
   const fillingCoreOpacity = bursting ? 0.94 : burstShaped ? 0.88 : 0;
   const fillingCoreRadius =
-    bursting || burstShaped ? "58% 42% 55% 45% / 55% 62% 38% 45%" : "50%";
+    bursting || burstShaped ? "62% 38% 58% 42% / 52% 66% 34% 48%" : "50%";
   // 爆裂中透明度/圆角也交给动画起始帧（0% 帧 opacity 0），内联仅背景色与定位；transition 只服务残体收敛
   const fillingCoreTransition = bursting ? "" : "transition: transform 0.3s ease-out, opacity 0.25s ease-out;";
 
@@ -854,8 +895,8 @@ export default function IndexPage() {
   const ballHeightPx = ballWidthPx * ballSize.heightRatio;
   const stackList = stackLayout(stackCount, ballHeightPx, containerH);
   const isMultiStack = stackCount > 1;
-  // 蜡皮色：主体色向白色混合（泛白蜡壳）；碎片/翻皮同为蜡皮色
-  const waxShellColor = mixHexColor(activeToy?.color ?? "#ffe6d8", "#ffffff", WAX_MIX_RATIO);
+  // 蜡皮碎片色：白蜡壳崩开的碎片（更高白度，白蜂蜡乳白壳）
+  const waxShellColor = mixHexColor(activeToy?.color ?? "#ffe6d8", "#ffffff", 0.8);
   // 捏爆变形圆角（不对称，蜡皮局部塌陷鼓包）：爆裂中偏规则崩裂，残体态更歪扭不对称
   const burstRadius = "52% 48% 55% 45% / 62% 38% 58% 42%";
   const remnantRadius = "64% 40% 58% 44% / 48% 70% 36% 66%";
@@ -928,12 +969,30 @@ export default function IndexPage() {
           className="squishy-tint"
           style={`background-color: ${toyColor};`}
         />
+        {/* 白蜡膜层：外层乳白半透蜡壳（大豆蜡+蜂蜡），任何颜色都罩在外面；捏爆/残体态蜡碎减淡（粘土外露） */}
+        <View
+          className="squishy-wax-film"
+          style={`opacity: ${(bursting ? WAX_FILM_OPACITY * 0.45 : burstShaped ? WAX_FILM_OPACITY * 0.3 : WAX_FILM_OPACITY).toFixed(2)}; transition: opacity ${bursting ? "0.3s ease-out 0.25s" : "0.35s ease-out"};`}
+        />
+        {/* 蜡面粉霜颗粒：大豆蜡冷凝的哑光霜感，与蜡膜同层减淡 */}
+        <View
+          className="squishy-wax-frost"
+          style={`opacity: ${(bursting ? 0.6 * 0.45 : burstShaped ? 0.6 * 0.3 : 0.6).toFixed(2)};`}
+        />
         {/* 耳朵/头顶装饰（结构件，叠在身体上方） */}
         {renderEarParts(earId, toyColor, `ball-${index}`)}
         {/* 爱心由三片结构件组成（其余形状为容器本体） */}
         {isHeart && !(bursting || burstShaped) ? renderHeartParts(toyColor, `ball-${index}`) : null}
         <View className="squishy-highlight" />
-        <View className="squishy-dent" style={`opacity: ${dentOpacity.toFixed(2)};`} />
+        {/* 粘土主凹陷：捏的位置深影内陷 + 下缘受光隆起唇（陶土记忆：松手保留） */}
+        <View
+          className={`squishy-dent-group${deepBoost > 0.3 ? " is-deep" : ""}`}
+          style={`opacity: ${dentGroupOpacity.toFixed(2)}; transform: scale(${dentGroupScale.toFixed(2)});`}
+        >
+          <View className="squishy-dent-pit" />
+          <View className="squishy-dent-edge" />
+          <View className="squishy-dent-rim" />
+        </View>
         <View
           className="squishy-dent squishy-dent-2"
           style={`opacity: ${stepOpacities[0].toFixed(2)};`}
@@ -956,11 +1015,22 @@ export default function IndexPage() {
           <View className="squishy-remnant-cleft">
             <View className="squishy-remnant-cleft-line squishy-remnant-cleft-line-1" />
             <View className="squishy-remnant-cleft-line squishy-remnant-cleft-line-2" />
+            <View className="squishy-remnant-cleft-nick squishy-remnant-cleft-nick-0" />
+            <View className="squishy-remnant-cleft-nick squishy-remnant-cleft-nick-1" />
+            <View className="squishy-remnant-cleft-nick squishy-remnant-cleft-nick-2" />
             <View className="squishy-remnant-cleft-lip squishy-remnant-cleft-lip-l" />
             <View className="squishy-remnant-cleft-lip squishy-remnant-cleft-lip-r" />
+            {/* 粘土/蜡屑残留（裂口周边小碎屑，受力后的随机感：7 片大小错落） */}
+            {[0, 1, 2, 3, 4, 5, 6].map((id) => (
+              <View
+                key={`crumb-${id}`}
+                className={`squishy-remnant-crumb squishy-remnant-crumb-${id}`}
+                style={`background-color: ${id % 3 === 0 ? waxShellColor : id % 3 === 1 ? burstJamColor : shellColor};`}
+              />
+            ))}
           </View>
         ) : null}
-        {/* 蜡皮裂纹（≥60% 力度浮现，捏爆后常驻；6 条放射裂缝） */}
+        {/* 蜡皮裂纹（≥60% 力度浮现，捏爆后常驻；6 条放射裂缝 + 2 条分叉细屑） */}
         <View className="squishy-crack-wrap" style={`opacity: ${crackOpacity.toFixed(2)};`}>
           <View className="squishy-crack squishy-crack-1" />
           <View className="squishy-crack squishy-crack-2" />
@@ -968,6 +1038,8 @@ export default function IndexPage() {
           <View className="squishy-crack squishy-crack-4" />
           <View className="squishy-crack squishy-crack-5" />
           <View className="squishy-crack squishy-crack-6" />
+          <View className="squishy-crack squishy-crack-7" />
+          <View className="squishy-crack squishy-crack-8" />
         </View>
         {/* 裂缝渗馅/泵浆：六处裂缝口各一处馅色；按压时随力度同步渗出（内联透明度渐变），捏爆时由 is-burst 动画涌出流动 */}
         {oozeVisible ? (
@@ -976,7 +1048,7 @@ export default function IndexPage() {
               <View
                 key={`ooze-${id}`}
                 className={`squishy-ooze squishy-ooze-${id}${bursting ? " is-burst" : ""}`}
-                style={`background-color: ${burstJamColor}; opacity: ${(bursting ? 0.9 : seepProgress * 0.72).toFixed(2)}; transform: scale(${(bursting ? 1.05 : 0.3 + seepProgress * 0.42).toFixed(2)});`}
+                style={`background-color: ${burstJamColor}; opacity: ${(bursting ? 0.92 : seepProgress * 0.8).toFixed(2)}; transform: scale(${(bursting ? 1.05 : 0.3 + seepProgress * 0.5).toFixed(2)});`}
               />
             ))}
           </View>
@@ -1167,6 +1239,17 @@ export default function IndexPage() {
                             className="squishy-tint"
                             style={`background-color: ${previewColor};`}
                           />
+                        ) : null}
+                        {/* 白蜡膜层：外层乳白半透蜡壳（DIY 预览与实捏一致） */}
+                        {previewShape !== "heart" ? (
+                          <View
+                            className="squishy-wax-film"
+                            style={`opacity: ${WAX_FILM_OPACITY.toFixed(2)};`}
+                          />
+                        ) : null}
+                        {/* 蜡面粉霜颗粒：与实捏一致的哑光霜感 */}
+                        {previewShape !== "heart" ? (
+                          <View className="squishy-wax-frost" style="opacity: 0.6;" />
                         ) : null}
                         {renderEarParts(previewEar, previewColor, "preview")}
                         {previewShape === "heart"
