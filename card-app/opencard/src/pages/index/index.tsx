@@ -22,8 +22,8 @@ const FEEDBACK_MS = 1600;
 const REPORT_THROTTLE_MS = 1200;
 /** 叠捏连播音效基础间隔（ms，数量越大越密） */
 const STACK_SOUND_GAP_MS = 55;
-/** 爆裂动画总时长（ms）：蜡皮碎裂飞散 0-0.95s → 馅料爆浆 0.32-1.45s（先见碎裂再见爆浆的两段时序） */
-const BURST_MS = 1500;
+/** 爆裂动画总时长（ms）：蜡皮碎裂飞散 0-1.1s（抛物弧线）→ 馅料从裂缝泵出 0.3-1.9s（流动瘫软） */
+const BURST_MS = 1950;
 /** 数量输入上限 */
 const STACK_MAX = 100;
 /** 音效连播抽样上限（超过该数量按比例抽样播放） */
@@ -593,7 +593,7 @@ export default function IndexPage() {
     }
   }, [cardData, levels, playSqueezeFeedback, reportSqueeze]);
 
-  /** 应用叠捏数量（钳制 1-100，越界高亮提示；回显钳制后数值） */
+  /** 应用叠捏数量（钳制 1-100，越界高亮提示；回显钳制后数值）；数量变化时自动把捏捏复原到全新蜡皮 */
   const applyStackCount = useCallback(
     (raw: number) => {
       const next = Math.min(stackMax, Math.max(stackMin, Math.round(raw) || stackMin));
@@ -607,10 +607,25 @@ export default function IndexPage() {
           }
         }, STACK_HINT_MS);
       }
+      if (next === stackCountRef.current) {
+        return; // 数量未变不触发复原
+      }
+      // 数量切换即换一盘：中断按压、清残体/渗馅，回到全新蜡皮
+      if (powerTimerRef.current) {
+        clearInterval(powerTimerRef.current);
+        powerTimerRef.current = null;
+      }
+      setPressing(false);
+      pressingRef.current = false;
+      setSqueezed(false);
+      setPower(0);
+      powerRef.current = 0;
+      resetBurst();
+      stackCountRef.current = next; // 同步写 ref：连点/长按连发立即读到最新数量
       setStackCount(next);
       setStackInput(String(next));
     },
-    [stackMin, stackMax],
+    [stackMin, stackMax, resetBurst],
   );
 
   /** 自定义数量输入（Input 文本变化） */
@@ -643,7 +658,7 @@ export default function IndexPage() {
     }
   }, []);
 
-  /** 步进 ±delta：单击一次；长按 450ms 后每 110ms 连发（连发步长 5），松手停止 */
+  /** 步进 ±delta：单击一次；长按 450ms 后每 110ms 连发（连发步长 5），松手停止；任何数量变化都走 applyStackCount 复原捏捏 */
   const startStep = useCallback(
     (delta: 1 | -1) => {
       if (pressingRef.current) return;
@@ -652,18 +667,11 @@ export default function IndexPage() {
       stepHoldTimerRef.current = setTimeout(() => {
         stepHoldTimerRef.current = null;
         stepHoldIntervalRef.current = setInterval(() => {
-          const base = stackCountRef.current;
-          const next = Math.min(stackMax, Math.max(stackMin, base + delta * STEP_HOLD_BATCH));
-          if (next === base) {
-            stopStepHold();
-            return;
-          }
-          setStackCount(next);
-          setStackInput(String(next));
+          applyStackCount(stackCountRef.current + delta * STEP_HOLD_BATCH);
         }, STEP_HOLD_INTERVAL_MS);
       }, STEP_HOLD_DELAY_MS);
     },
-    [applyStackCount, stackMax, stackMin, stopStepHold],
+    [applyStackCount, stopStepHold],
   );
 
   /** 切换玩具 */
@@ -826,16 +834,17 @@ export default function IndexPage() {
   // 爆浆色：有馅用馅色，无馅用米白内瓤色
   const burstJamColor =
     activeFilling && activeFilling.id !== "none" ? activeFilling.hex : "#fff7ec";
-  // 内馅芯：常驻渲染但捏爆前完全透明（蜡皮未破不露馅），捏爆时 0.32s 延迟后从裂口涌出（先见碎裂再见爆浆）
-  // 爆浆形态：不规则 ooze 圆角，scale 1.55 只铺到破口区域（保留大片蜡皮残边，避免馅色铺满整球）；残体态收拢为 1.35 常驻露出
-  const fillingCoreTransform = `translate(-50%, -50%) scale(${bursting ? 1.55 : burstShaped ? 1.35 : 1}) translate(${bursting || burstShaped ? "5%, -8%" : "0, 0"})`;
-  const fillingCoreOpacity = bursting ? 0.9 : burstShaped ? 0.85 : 0;
+  // 内馅芯：常驻渲染但捏爆前完全透明（蜡皮未破不露馅），捏爆时 0.34s 延迟后从裂口涌出（先见碎裂再见爆浆）
+  // 爆裂中 transform 全权交给 CSS 果冻流动动画（squishyFillingJelly 帧内含定位），内联只保留定位；
+  // 残体态内联收敛为 1.45 饱满常驻露出（位置偏移与动画结束帧对齐，切换不跳变）
+  const fillingCoreTransform = bursting
+    ? "translate(-50%, -50%)"
+    : `translate(-50%, -50%) scale(${burstShaped ? 1.45 : 1}) translate(${burstShaped ? "5%, -8%" : "0, 0"})`;
+  const fillingCoreOpacity = bursting ? 0.94 : burstShaped ? 0.88 : 0;
   const fillingCoreRadius =
     bursting || burstShaped ? "58% 42% 55% 45% / 55% 62% 38% 45%" : "50%";
-  // 延迟只在捏爆进入时生效（先碎裂后爆浆）；离开爆裂态立即平滑收场
-  const fillingCoreTransition = bursting
-    ? "transition: transform 0.38s cubic-bezier(0.55, 0, 0.85, 0.4) 0.32s, opacity 0.24s ease-out 0.32s;"
-    : "transition: transform 0.3s ease-out, opacity 0.25s ease-out;";
+  // 爆裂中透明度/圆角也交给动画起始帧（0% 帧 opacity 0），内联仅背景色与定位；transition 只服务残体收敛
+  const fillingCoreTransition = bursting ? "" : "transition: transform 0.3s ease-out, opacity 0.25s ease-out;";
 
   // 叠捏堆叠：侧视垂直堆叠成塔（底部对齐、整体居中）；单只尺寸按数量收缩
   const containerW = stackSize?.w ?? 300;
@@ -845,14 +854,6 @@ export default function IndexPage() {
   const ballHeightPx = ballWidthPx * ballSize.heightRatio;
   const stackList = stackLayout(stackCount, ballHeightPx, containerH);
   const isMultiStack = stackCount > 1;
-  // 双手几何（第一人称视角）：按当前球体尺寸缩放，从两侧下沿托住捏捏；按压时随力度向内捏合
-  const handW = Math.max(56, Math.round(ballWidthPx * 0.6));
-  const handH = Math.max(48, Math.round(ballHeightPx * 0.82));
-  const handCenterY = containerH / 2 + ballHeightPx * 0.14;
-  const handGripX = ballWidthPx / 2 + handW * 0.24;
-  const handSqueeze = pressing ? 3 + 11 * (power / 100) : bursting ? 12 : burstShaped ? 2 : 0;
-  const handLeftStyle = `width: ${handW}px; height: ${handH}px; left: ${(containerW / 2 - handGripX - handW / 2).toFixed(1)}px; top: ${(handCenterY - handH / 2).toFixed(1)}px; transform: translateX(${handSqueeze.toFixed(1)}px);`;
-  const handRightStyle = `width: ${handW}px; height: ${handH}px; left: ${(containerW / 2 + handGripX - handW / 2).toFixed(1)}px; top: ${(handCenterY - handH / 2).toFixed(1)}px; transform: translateX(${(-handSqueeze).toFixed(1)}px);`;
   // 蜡皮色：主体色向白色混合（泛白蜡壳）；碎片/翻皮同为蜡皮色
   const waxShellColor = mixHexColor(activeToy?.color ?? "#ffe6d8", "#ffffff", WAX_MIX_RATIO);
   // 捏爆变形圆角（不对称，蜡皮局部塌陷鼓包）：爆裂中偏规则崩裂，残体态更歪扭不对称
@@ -880,8 +881,6 @@ export default function IndexPage() {
   // 裂缝渗馅泉眼编号：六处裂缝口各一处馅色（位置与裂线一一对应）
   const oozeIds = [0, 1, 2, 3, 4, 5];
   const oozeVisible = (seepProgress > 0 || bursting || burstShaped) && stackCount <= 6;
-  const oozeOpacity = bursting ? 0.92 : seepProgress * 0.72;
-  const oozeScale = bursting ? 1.05 : 0.3 + seepProgress * 0.42;
 
   /** 渲染单只捏捏（蜡皮壳 + 主色晕染 + 耳朵 + 凹陷 + 裂纹 + 内馅芯） */
   const renderSquishy = (index: number) => {
@@ -947,9 +946,9 @@ export default function IndexPage() {
           className="squishy-dent squishy-dent-4"
           style={`opacity: ${stepOpacities[2].toFixed(2)};`}
         />
-        {/* 内馅芯：常驻挂载但捏爆前全透明，捏爆 0.32s 后从裂口涌出（过渡才能从透明渐显） */}
+        {/* 内馅芯：常驻挂载但捏爆前全透明，捏爆 0.32s 后从裂口涌出；爆裂中带流动脉冲（果冻质感） */}
         <View
-          className="squishy-filling-core"
+          className={`squishy-filling-core${bursting ? " is-flowing" : ""}`}
           style={`background-color: ${burstJamColor}; transform: ${fillingCoreTransform}; opacity: ${fillingCoreOpacity.toFixed(2)}; border-radius: ${fillingCoreRadius}; ${fillingCoreTransition}`}
         />
         {/* 爆后残体主裂口：蜡皮破口常驻（不对称裂口边 + 偏侧塌陷），burstShaped 时渲染 */}
@@ -970,14 +969,14 @@ export default function IndexPage() {
           <View className="squishy-crack squishy-crack-5" />
           <View className="squishy-crack squishy-crack-6" />
         </View>
-        {/* 裂缝渗馅/泵浆：六处裂缝口各一处馅色；按压时随力度同步渗出，捏爆时泵出并在残体上残留 */}
+        {/* 裂缝渗馅/泵浆：六处裂缝口各一处馅色；按压时随力度同步渗出（内联透明度渐变），捏爆时由 is-burst 动画涌出流动 */}
         {oozeVisible ? (
           <View className="squishy-ooze-wrap">
             {oozeIds.map((id) => (
               <View
                 key={`ooze-${id}`}
                 className={`squishy-ooze squishy-ooze-${id}${bursting ? " is-burst" : ""}`}
-                style={`background-color: ${burstJamColor}; opacity: ${oozeOpacity.toFixed(2)}; transform: scale(${oozeScale.toFixed(2)});`}
+                style={`background-color: ${burstJamColor}; opacity: ${(bursting ? 0.9 : seepProgress * 0.72).toFixed(2)}; transform: scale(${(bursting ? 1.05 : 0.3 + seepProgress * 0.42).toFixed(2)});`}
               />
             ))}
           </View>
@@ -1023,25 +1022,6 @@ export default function IndexPage() {
                   squeezed ? " is-squeezed" : ""
                 }`}
               >
-                {/* 书桌场景背景（卧室书桌一角：暖墙 + 木桌面 + 墙面搁板小景，低饱和衬托主体） */}
-                <View className="squishy-scene">
-                  <View className="squishy-scene-wall" />
-                  <View className="squishy-scene-glow" />
-                  <View className="squishy-scene-plant">
-                    <View className="squishy-scene-leaf squishy-scene-leaf-1" />
-                    <View className="squishy-scene-leaf squishy-scene-leaf-2" />
-                    <View className="squishy-scene-leaf squishy-scene-leaf-3" />
-                    <View className="squishy-scene-pot" />
-                  </View>
-                  <View className="squishy-scene-shelf" />
-                  <View className="squishy-scene-books">
-                    <View className="squishy-scene-book squishy-scene-book-1" />
-                    <View className="squishy-scene-book squishy-scene-book-2" />
-                    <View className="squishy-scene-book squishy-scene-book-3" />
-                  </View>
-                  <View className="squishy-scene-desk" />
-                  <View className="squishy-scene-desk-line" />
-                </View>
                 <View className="squishy-shadow" />
                 <View className={`squishy-stack${isMultiStack ? " is-multi" : ""}`}>
                   {stackList.map((_, index) => renderSquishy(index))}
@@ -1101,33 +1081,6 @@ export default function IndexPage() {
                       style={`background-color: ${burstJamColor};`}
                     />
                   ))}
-                  {/* 双手（第一人称视角托住捏捏；按压时随力度向内捏合，景深压在球体之上；手部同样可触发捏压） */}
-                  <View
-                    className={`squishy-hand squishy-hand-left${pressing ? " is-gripping" : ""}${bursting ? " is-bursting" : ""}`}
-                    style={handLeftStyle}
-                    onTouchStart={handlePressStart}
-                    onTouchEnd={handlePressEnd}
-                    onTouchCancel={handlePressEnd}
-                  >
-                    <View className="squishy-hand-palm" />
-                    <View className="squishy-hand-thumb" />
-                    <View className="squishy-hand-knuckle squishy-hand-knuckle-1" />
-                    <View className="squishy-hand-knuckle squishy-hand-knuckle-2" />
-                    <View className="squishy-hand-knuckle squishy-hand-knuckle-3" />
-                  </View>
-                  <View
-                    className={`squishy-hand squishy-hand-right${pressing ? " is-gripping" : ""}${bursting ? " is-bursting" : ""}`}
-                    style={handRightStyle}
-                    onTouchStart={handlePressStart}
-                    onTouchEnd={handlePressEnd}
-                    onTouchCancel={handlePressEnd}
-                  >
-                    <View className="squishy-hand-palm" />
-                    <View className="squishy-hand-thumb squishy-hand-thumb-r" />
-                    <View className="squishy-hand-knuckle squishy-hand-knuckle-1" />
-                    <View className="squishy-hand-knuckle squishy-hand-knuckle-2" />
-                    <View className="squishy-hand-knuckle squishy-hand-knuckle-3" />
-                  </View>
                 </View>
                 {/* 力度条（按压中显示当前压力等级） */}
                 {pressing && currentLevel ? (

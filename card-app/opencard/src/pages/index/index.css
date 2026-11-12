@@ -154,7 +154,7 @@
   margin-left: 1.5vw;
 }
 
-/* 主体玩区（书桌场景画框在其内，圆角裁切由场景面板自身处理，玩区不裁切以免碎片飞行被切断） */
+/* 主体玩区（全卡背景图透出，玩区透明；不裁切以免碎片飞行被切断） */
 .squishy-playzone {
   position: relative;
   display: flex;
@@ -168,181 +168,10 @@
   min-height: 0;
 }
 
-/* ---------- 书桌场景背景（卧室书桌一角：暖墙 + 木桌面 + 摆件） ---------- */
-
-.squishy-scene {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 0;
-  border-radius: 14px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 252, 245, 0.25);
-}
-
-/* 暖色墙面（上半区，纵向渐变 + 柔光） */
-.squishy-scene-wall {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 62%;
-  background: linear-gradient(180deg, #f3d9c3 0%, #eed2ba 55%, #e7c8ab 100%);
-}
-
-/* 桌面暖光（台灯光晕感） */
-.squishy-scene-glow {
-  position: absolute;
-  top: 4%;
-  left: 50%;
-  width: 76%;
-  height: 46%;
-  margin-left: -38%;
-  border-radius: 50%;
-  background: radial-gradient(
-    ellipse at center,
-    rgba(255, 244, 214, 0.85) 0%,
-    rgba(255, 244, 214, 0.35) 45%,
-    rgba(255, 244, 214, 0) 75%
-  );
-}
-
-/* 木桌面（下半区，横纹渐变） */
-.squishy-scene-desk {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 40%;
-  background: linear-gradient(180deg, #d9a97c 0%, #cf9c6d 35%, #c08a58 100%);
-}
-
-/* 桌沿高光线（桌面与墙的交界，加宽加亮确保可见） */
-.squishy-scene-desk-line {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 39.4%;
-  height: 4px;
-  background: linear-gradient(
-    90deg,
-    rgba(255, 232, 190, 0) 0%,
-    rgba(255, 232, 190, 0.9) 15%,
-    rgba(255, 224, 175, 1) 50%,
-    rgba(255, 232, 190, 0.9) 85%,
-    rgba(255, 232, 190, 0) 100%
-  );
-  box-shadow: 0 1px 2px rgba(120, 70, 35, 0.25);
-}
-
-/* 左侧小盆栽（墙面置物搁板上的远景小景，避开双手遮挡区） */
-.squishy-scene-plant {
-  position: absolute;
-  top: 5%;
-  left: 7%;
-  width: 14%;
-  height: 17%;
-}
-
-.squishy-scene-leaf {
-  position: absolute;
-  border-radius: 58% 42% 55% 45% / 62% 58% 42% 38%;
-  background: linear-gradient(160deg, #9cc49a 0%, #7fae7d 100%);
-  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.35);
-}
-
-.squishy-scene-leaf-1 {
-  top: 0;
-  left: 18%;
-  width: 64%;
-  height: 46%;
-  transform: rotate(-24deg);
-}
-
-.squishy-scene-leaf-2 {
-  top: 8%;
-  left: 0;
-  width: 52%;
-  height: 42%;
-  transform: rotate(38deg);
-}
-
-.squishy-scene-leaf-3 {
-  top: 18%;
-  left: 34%;
-  width: 46%;
-  height: 38%;
-  transform: rotate(-6deg);
-}
-
-.squishy-scene-pot {
-  position: absolute;
-  bottom: 0;
-  left: 24%;
-  width: 52%;
-  height: 30%;
-  border-radius: 16% 16% 22% 22% / 30% 30% 46% 46%;
-  background: linear-gradient(180deg, #d98f6a 0%, #b9734f 100%);
-  box-shadow: inset 0 2px 3px rgba(255, 255, 255, 0.3);
-}
-
-/* 墙面置物搁板（横贯木条，盆栽与书堆坐落在搁板上，避开双手遮挡区） */
-.squishy-scene-shelf {
-  position: absolute;
-  top: 21%;
-  left: 4%;
-  width: 42%;
-  height: 2.6%;
-  border-radius: 3px;
-  background: linear-gradient(180deg, #c98f5e 0%, #a86f45 100%);
-  box-shadow: 0 2px 4px rgba(90, 55, 30, 0.35);
-}
-
-/* 右侧书堆（坐落在搁板上，远景摆件） */
-.squishy-scene-books {
-  position: absolute;
-  top: 13%;
-  right: 10%;
-  width: 22%;
-  height: 16%;
-}
-
-.squishy-scene-book {
-  position: absolute;
-  left: 0;
-  width: 100%;
-  height: 30%;
-  border-radius: 3px;
-  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.28), 0 1px 2px rgba(90, 60, 40, 0.3);
-}
-
-.squishy-scene-book-1 {
-  bottom: 0;
-  background: linear-gradient(90deg, #e58f8f 0%, #d97a7a 100%);
-  transform: rotate(-3deg);
-}
-
-.squishy-scene-book-2 {
-  bottom: 32%;
-  background: linear-gradient(90deg, #8fb3e5 0%, #7aa0d4 100%);
-  transform: rotate(1.5deg);
-}
-
-.squishy-scene-book-3 {
-  bottom: 64%;
-  left: 8%;
-  width: 84%;
-  height: 28%;
-  background: linear-gradient(90deg, #e5c98f 0%, #d8b878 100%);
-  transform: rotate(-2deg);
-}
-
-/* 玩具投影（柔和径向渐变，无 filter；落在桌面场景上） */
+/* 玩具投影（柔和径向渐变，无 filter；落在全卡背景图上） */
 .squishy-shadow {
   position: absolute;
-  bottom: 12%;
+  bottom: 6%;
   left: 50%;
   width: 52%;
   height: 3.2vh;
@@ -643,6 +472,34 @@
   height: 38%;
   border-radius: 50%;
   box-shadow: inset 0 -0.8vh 1.6vh rgba(0, 0, 0, 0.18);
+}
+
+/* 捏爆中：馅团涌出时带果冻式流动脉冲（多段黏稠涌动，重力下垂，无回缩） */
+.squishy-filling-core.is-flowing {
+  animation: squishyFillingJelly 1.45s cubic-bezier(0.4, 0.1, 0.5, 0.6) 0.34s both;
+}
+
+@keyframes squishyFillingJelly {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5) scaleX(1.3);
+  }
+  16% {
+    opacity: 0.92;
+    transform: translate(-47%, -53%) scale(1.26) scaleX(0.94) rotate(-2deg);
+  }
+  34% {
+    opacity: 0.95;
+    transform: translate(-52%, -48%) scale(1.46) scaleX(1.04) rotate(2deg);
+  }
+  58% {
+    opacity: 0.94;
+    transform: translate(-49%, -44%) scale(1.6) scaleX(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0.94;
+    transform: translate(-50%, -38%) scale(1.68) scaleX(1.05) rotate(0deg);
+  }
 }
 
 /* 脆皮裂纹（≥60% 力度浮现，捏爆后常驻；透明度由 TSX 内联控制） */
@@ -956,7 +813,8 @@
   }
 }
 
-/* 蜡皮爆裂碎片（捏爆瞬时从球缘炸出，颜色由 TSX 内联提供：泛白蜡壳色） */
+/* 蜡皮爆裂碎片（捏爆瞬时从球缘炸出，颜色由 TSX 内联提供：泛白蜡壳色）
+   抛物线轨迹：先向上扬起，随后受重力下坠掉向桌面（参照真实蜡皮碎裂掉落） */
 .squishy-fragment {
   position: absolute;
   left: 50%;
@@ -973,7 +831,7 @@
     0 1px 3px rgba(22, 24, 35, 0.22),
     -14px 10px 18px -14px rgba(22, 24, 35, 0.4),
     14px 10px 18px -14px rgba(255, 255, 255, 0.5);
-  animation-duration: 1.05s;
+  animation-duration: 1.1s;
   animation-timing-function: cubic-bezier(0.1, 0.8, 0.3, 1);
   animation-fill-mode: both;
   animation-iteration-count: 1;
@@ -1167,7 +1025,7 @@
   margin-left: -8px;
   margin-top: -6px;
   border-radius: 3px;
-  animation-duration: 0.85s;
+  animation-duration: 0.95s;
 }
 
 .squishy-frag-6 {
@@ -1205,12 +1063,16 @@
     transform: translate(0, 0) rotate(0deg) scale(1.15);
     opacity: 1;
   }
-  8% {
-    transform: translate(-52px, -28px) rotate(-26deg) scale(1);
+  28% {
+    transform: translate(-78px, -52px) rotate(-30deg) scale(1);
+    opacity: 1;
+  }
+  58% {
+    transform: translate(-92px, -37px) rotate(-39deg) scale(0.92);
     opacity: 1;
   }
   100% {
-    transform: translate(-150px, -46px) rotate(-58deg) scale(0.62);
+    transform: translate(-128px, 66px) rotate(-85deg) scale(0.78);
     opacity: 0;
   }
 }
@@ -1220,12 +1082,16 @@
     transform: translate(0, 0) rotate(0deg) scale(1.15);
     opacity: 1;
   }
-  8% {
-    transform: translate(48px, -38px) rotate(34deg) scale(1);
+  28% {
+    transform: translate(82px, -64px) rotate(38deg) scale(1);
+    opacity: 1;
+  }
+  58% {
+    transform: translate(97px, -46px) rotate(49deg) scale(0.92);
     opacity: 1;
   }
   100% {
-    transform: translate(128px, -86px) rotate(72deg) scale(0.55);
+    transform: translate(142px, 78px) rotate(92deg) scale(0.78);
     opacity: 0;
   }
 }
@@ -1235,12 +1101,16 @@
     transform: translate(0, 0) rotate(0deg) scale(1.15);
     opacity: 1;
   }
-  8% {
-    transform: translate(-28px, -52px) rotate(20deg) scale(1);
+  28% {
+    transform: translate(-52px, -88px) rotate(24deg) scale(1);
+    opacity: 1;
+  }
+  58% {
+    transform: translate(-61px, -63px) rotate(31deg) scale(0.92);
     opacity: 1;
   }
   100% {
-    transform: translate(-72px, -152px) rotate(44deg) scale(0.6);
+    transform: translate(-86px, 120px) rotate(62deg) scale(0.78);
     opacity: 0;
   }
 }
@@ -1250,12 +1120,16 @@
     transform: translate(0, 0) rotate(0deg) scale(1.15);
     opacity: 1;
   }
-  8% {
-    transform: translate(38px, 32px) rotate(-48deg) scale(1);
+  28% {
+    transform: translate(66px, -70px) rotate(-52deg) scale(1);
+    opacity: 1;
+  }
+  58% {
+    transform: translate(78px, -50px) rotate(-68deg) scale(0.92);
     opacity: 1;
   }
   100% {
-    transform: translate(92px, 82px) rotate(-96deg) scale(0.55);
+    transform: translate(118px, 104px) rotate(-118deg) scale(0.78);
     opacity: 0;
   }
 }
@@ -1265,12 +1139,16 @@
     transform: translate(0, 0) rotate(0deg) scale(1.15);
     opacity: 1;
   }
-  8% {
-    transform: translate(-44px, 46px) rotate(52deg) scale(1);
+  28% {
+    transform: translate(-88px, -58px) rotate(56deg) scale(1);
+    opacity: 1;
+  }
+  58% {
+    transform: translate(-104px, -42px) rotate(73deg) scale(0.92);
     opacity: 1;
   }
   100% {
-    transform: translate(-112px, 122px) rotate(104deg) scale(0.62);
+    transform: translate(-150px, 96px) rotate(130deg) scale(0.78);
     opacity: 0;
   }
 }
@@ -1280,12 +1158,16 @@
     transform: translate(0, 0) rotate(0deg) scale(1.15);
     opacity: 1;
   }
-  8% {
-    transform: translate(56px, 10px) rotate(-16deg) scale(1);
+  28% {
+    transform: translate(104px, -40px) rotate(-20deg) scale(1);
+    opacity: 1;
+  }
+  58% {
+    transform: translate(123px, -29px) rotate(-26deg) scale(0.92);
     opacity: 1;
   }
   100% {
-    transform: translate(158px, 28px) rotate(-38deg) scale(0.5);
+    transform: translate(168px, 58px) rotate(-64deg) scale(0.78);
     opacity: 0;
   }
 }
@@ -1295,12 +1177,16 @@
     transform: translate(0, 0) rotate(0deg) scale(1.1);
     opacity: 1;
   }
-  6% {
-    transform: translate(-56px, -36px) rotate(32deg) scale(0.95);
+  26% {
+    transform: translate(-66px, -44px) rotate(34deg) scale(0.95);
+    opacity: 1;
+  }
+  56% {
+    transform: translate(-77px, -31px) rotate(45deg) scale(0.85);
     opacity: 1;
   }
   100% {
-    transform: translate(-166px, -92px) rotate(58deg) scale(0.4);
+    transform: translate(-104px, 82px) rotate(88deg) scale(0.66);
     opacity: 0;
   }
 }
@@ -1310,12 +1196,16 @@
     transform: translate(0, 0) rotate(0deg) scale(1.1);
     opacity: 1;
   }
-  6% {
-    transform: translate(52px, -54px) rotate(-38deg) scale(0.95);
+  26% {
+    transform: translate(74px, -52px) rotate(-40deg) scale(0.95);
+    opacity: 1;
+  }
+  56% {
+    transform: translate(86px, -36px) rotate(-53deg) scale(0.85);
     opacity: 1;
   }
   100% {
-    transform: translate(142px, -138px) rotate(-74deg) scale(0.38);
+    transform: translate(122px, 92px) rotate(-96deg) scale(0.66);
     opacity: 0;
   }
 }
@@ -1325,12 +1215,16 @@
     transform: translate(0, 0) rotate(0deg) scale(1.1);
     opacity: 1;
   }
-  6% {
-    transform: translate(-12px, -58px) rotate(16deg) scale(0.95);
+  26% {
+    transform: translate(-28px, -66px) rotate(18deg) scale(0.95);
+    opacity: 1;
+  }
+  56% {
+    transform: translate(-32px, -46px) rotate(24deg) scale(0.85);
     opacity: 1;
   }
   100% {
-    transform: translate(-34px, -176px) rotate(34deg) scale(0.35);
+    transform: translate(-44px, 128px) rotate(46deg) scale(0.66);
     opacity: 0;
   }
 }
@@ -1340,12 +1234,16 @@
     transform: translate(0, 0) rotate(0deg) scale(1.1);
     opacity: 1;
   }
-  6% {
-    transform: translate(60px, 22px) rotate(-28deg) scale(0.95);
+  26% {
+    transform: translate(88px, -34px) rotate(-30deg) scale(0.95);
+    opacity: 1;
+  }
+  56% {
+    transform: translate(102px, -24px) rotate(-40deg) scale(0.85);
     opacity: 1;
   }
   100% {
-    transform: translate(178px, 66px) rotate(-52deg) scale(0.42);
+    transform: translate(148px, 72px) rotate(-72deg) scale(0.66);
     opacity: 0;
   }
 }
@@ -1355,12 +1253,16 @@
     transform: translate(0, 0) rotate(0deg) scale(1.1);
     opacity: 1;
   }
-  6% {
-    transform: translate(-62px, 28px) rotate(42deg) scale(0.95);
+  26% {
+    transform: translate(-92px, -36px) rotate(44deg) scale(0.95);
+    opacity: 1;
+  }
+  56% {
+    transform: translate(-107px, -25px) rotate(58deg) scale(0.85);
     opacity: 1;
   }
   100% {
-    transform: translate(-182px, 88px) rotate(78deg) scale(0.4);
+    transform: translate(-152px, 84px) rotate(104deg) scale(0.66);
     opacity: 0;
   }
 }
@@ -1370,12 +1272,16 @@
     transform: translate(0, 0) rotate(0deg) scale(1.1);
     opacity: 1;
   }
-  6% {
-    transform: translate(16px, 58px) rotate(-18deg) scale(0.95);
+  26% {
+    transform: translate(34px, -62px) rotate(-22deg) scale(0.95);
+    opacity: 1;
+  }
+  56% {
+    transform: translate(39px, -43px) rotate(-29deg) scale(0.85);
     opacity: 1;
   }
   100% {
-    transform: translate(42px, 162px) rotate(-42deg) scale(0.38);
+    transform: translate(56px, 132px) rotate(-56deg) scale(0.66);
     opacity: 0;
   }
 }
@@ -1398,7 +1304,7 @@
     rgba(255, 255, 255, 0) 76%
   );
   z-index: 7;
-  animation: squishyBurstFlash 0.16s ease-out forwards;
+  animation: squishyBurstFlash 0.3s ease-out forwards;
   animation-iteration-count: 1;
 }
 
@@ -1407,9 +1313,13 @@
     transform: scale(0.5);
     opacity: 0;
   }
-  18% {
-    transform: scale(1.1);
+  14% {
+    transform: scale(1.15);
     opacity: 1;
+  }
+  45% {
+    transform: scale(1.5);
+    opacity: 0.55;
   }
   100% {
     transform: scale(2);
@@ -1756,116 +1666,7 @@
   }
 }
 
-/* ---------- 双手（第一人称视角托捏，按压时向内捏合） ---------- */
-
-/* 单手：掌 + 拇指 + 三指节（CSS 结构件拼装），定位与位移由 TSX 内联提供 */
-.squishy-hand {
-  position: absolute;
-  z-index: 9;
-  transition: transform 0.16s ease-out;
-}
-
-/* 按压中：手指向内收（捏合），拇指同时下压 */
-.squishy-hand.is-gripping {
-  transition: transform 0.1s ease-out;
-}
-
-/* 捏爆瞬间：手被爆浆冲击微微外弹一下（不改变捏合位置） */
-.squishy-hand.is-bursting {
-  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.35, 1);
-}
-
-/* 掌心（肤色圆角梯形，带内侧阴影表达卷握） */
-.squishy-hand-palm {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  border-radius: 44% 40% 34% 38% / 40% 42% 52% 46%;
-  background: linear-gradient(165deg, #ffe3cf 0%, #f7c9a8 58%, #eeb58f 100%);
-  box-shadow:
-    inset 0 -6px 12px rgba(190, 120, 80, 0.28),
-    inset 0 4px 8px rgba(255, 255, 255, 0.45),
-    0 4px 10px rgba(60, 30, 15, 0.3);
-}
-
-/* 拇指（从掌侧伸向球体，卷握关键件） */
-.squishy-hand-thumb {
-  position: absolute;
-  bottom: 8%;
-  left: -14%;
-  width: 52%;
-  height: 34%;
-  border-radius: 46% 50% 58% 44% / 55% 60% 40% 45%;
-  background: linear-gradient(150deg, #ffe8d6 0%, #f5c4a2 100%);
-  transform: rotate(-18deg);
-  box-shadow:
-    inset 0 2px 4px rgba(255, 255, 255, 0.5),
-    inset 0 -3px 6px rgba(190, 120, 80, 0.25);
-}
-
-/* 右手拇指镜像 */
-.squishy-hand-thumb-r {
-  left: auto;
-  right: -14%;
-  transform: rotate(18deg);
-}
-
-/* 三指节（掌背上方三段手指，卷在球侧） */
-.squishy-hand-knuckle {
-  position: absolute;
-  border-radius: 42% 46% 50% 44% / 48% 52% 46% 50%;
-  background: linear-gradient(160deg, #ffe8d6 0%, #f2bfa0 100%);
-  box-shadow:
-    inset 0 2px 3px rgba(255, 255, 255, 0.5),
-    inset 0 -2px 4px rgba(190, 120, 80, 0.22);
-}
-
-.squishy-hand-knuckle-1 {
-  top: 2%;
-  left: 8%;
-  width: 46%;
-  height: 26%;
-  transform: rotate(-8deg);
-}
-
-.squishy-hand-knuckle-2 {
-  top: 10%;
-  left: -2%;
-  width: 40%;
-  height: 24%;
-  transform: rotate(-20deg);
-}
-
-.squishy-hand-knuckle-3 {
-  top: 20%;
-  left: -10%;
-  width: 36%;
-  height: 22%;
-  transform: rotate(-32deg);
-}
-
-/* 右手指节镜像（翻转朝向，不整卡 scale 避免文字/渐变反向） */
-.squishy-hand-right .squishy-hand-knuckle-1 {
-  left: auto;
-  right: 8%;
-  transform: rotate(8deg);
-}
-
-.squishy-hand-right .squishy-hand-knuckle-2 {
-  left: auto;
-  right: -2%;
-  transform: rotate(20deg);
-}
-
-.squishy-hand-right .squishy-hand-knuckle-3 {
-  left: auto;
-  right: -10%;
-  transform: rotate(32deg);
-}
-
-/* ---------- 裂缝渗馅/泵浆（与按压同步，无回弹） ---------- */
+/* ---------- 裂缝渗馅/泵浆（与按压同步，无回弹，流动质感） ---------- */
 
 /* 渗馅泉眼容器（挂在球体内，随球体一起形变） */
 .squishy-ooze-wrap {
@@ -1877,7 +1678,7 @@
   z-index: 3;
 }
 
-/* 单处泉眼：位置对应 6 条裂缝口，颜色/透明度/缩放由 TSX 内联（随按压进度同步） */
+/* 单处泉眼：位置对应 6 条裂缝口；常态透明，渗馅态由 is-seep 渐显，捏爆态由 is-burst 泵出 */
 .squishy-ooze {
   position: absolute;
   width: 22%;
@@ -1886,7 +1687,9 @@
   box-shadow:
     inset 0 -2px 4px rgba(0, 0, 0, 0.18),
     inset 0 2px 3px rgba(255, 255, 255, 0.4);
-  transition: opacity 0.18s ease-out;
+  opacity: 0;
+  transform: scale(0.3);
+  transition: opacity 0.25s ease-out, transform 0.25s ease-out;
 }
 
 /* 各泉眼位置与六条裂缝口对应（略偏裂缝端点，湿润堆积感） */
@@ -1920,12 +1723,62 @@
   top: 60%;
 }
 
-/* 捏爆瞬间泉眼放大成涌出泉（burst 修饰类） */
+/* 捏爆态：从裂缝口流动涌出（鼓胀 → 摊开 → 重力下垂拉长，黏稠挂壁，无回缩） */
 .squishy-ooze.is-burst {
-  transition: opacity 0.12s ease-out;
+  animation: squishyOozeFlow 1.42s cubic-bezier(0.35, 0.15, 0.55, 0.7) forwards;
+  animation-fill-mode: both;
 }
 
-/* ---------- 裂缝泵浆柱（捏爆时从主裂缝向上泵出，涌出后瘫软下垂） ---------- */
+
+
+.squishy-ooze-0.is-burst {
+  animation-delay: 0.34s;
+}
+
+.squishy-ooze-1.is-burst {
+  animation-delay: 0.44s;
+}
+
+.squishy-ooze-2.is-burst {
+  animation-delay: 0.38s;
+}
+
+.squishy-ooze-3.is-burst {
+  animation-delay: 0.52s;
+}
+
+.squishy-ooze-4.is-burst {
+  animation-delay: 0.48s;
+}
+
+.squishy-ooze-5.is-burst {
+  animation-delay: 0.56s;
+}
+
+@keyframes squishyOozeFlow {
+  0% {
+    opacity: 0;
+    transform: scale(0.22) translateY(-10%);
+  }
+  20% {
+    opacity: 0.9;
+    transform: scale(0.92) translateY(0) scaleY(0.92);
+  }
+  44% {
+    opacity: 0.95;
+    transform: scale(1.14) translateY(10%) scaleY(1.2);
+  }
+  72% {
+    opacity: 0.92;
+    transform: scale(1.08) translateY(22%) scaleY(1.36);
+  }
+  100% {
+    opacity: 0.72;
+    transform: scale(0.98) translateY(34%) scaleY(1.5);
+  }
+}
+
+/* ---------- 裂缝泵浆柱（捏爆时从主裂缝向上流动泵出，涌出后缓慢瘫软倒伏） ---------- */
 
 .squishy-pump-wrap {
   position: absolute;
@@ -1936,7 +1789,7 @@
   z-index: 8;
 }
 
-/* 单根浆柱：细长馅料从裂缝口竖直泵出，达到最高点后整体前倾瘫软（无回弹，慢3s 收尾） */
+/* 单根浆柱：细长馅料从裂缝口竖直泵出，多段果冻式生长后缓缓倒伏（全程流动感，无回弹） */
 .squishy-pump {
   position: absolute;
   width: 13px;
@@ -1948,100 +1801,124 @@
     inset 0 -3px 6px rgba(0, 0, 0, 0.2),
     inset 0 2px 4px rgba(255, 255, 255, 0.35);
   transform-origin: 50% 100%;
-  animation-duration: 2.8s;
-  animation-timing-function: cubic-bezier(0.2, 0.85, 0.45, 0.6);
+  animation-duration: 1.5s;
+  animation-timing-function: cubic-bezier(0.3, 0.35, 0.5, 0.65);
   animation-fill-mode: both;
   animation-iteration-count: 1;
   opacity: 0;
 }
 
-/* 三根浆柱：从三条主裂缝口泵出，各带错峰延迟 */
+/* 三根浆柱：从三条主裂缝口泵出，各带错峰延迟（最迟 0.34s + 1.5s = 1.84s < BURST_MS） */
 .squishy-pump-0 {
   margin-left: -34px;
   animation-name: squishyPumpL;
-  animation-delay: 0.18s;
+  animation-delay: 0.26s;
 }
 
 .squishy-pump-1 {
   margin-left: 0;
   animation-name: squishyPumpC;
-  animation-delay: 0.26s;
+  animation-delay: 0.3s;
 }
 
 .squishy-pump-2 {
   margin-left: 24px;
   animation-name: squishyPumpR;
-  animation-delay: 0.12s;
+  animation-delay: 0.2s;
 }
 
-/* 左柱：快速涌出 → 顶端膨胀 → 整体瘫向左侧（倒伏） */
+/* 左柱：多段生长 → 顶端鼓胀 → 大幅瘫软倒伏贴面（果冻感，无回弹） */
 @keyframes squishyPumpL {
   0% {
-    transform: scaleY(0.1) rotate(0deg);
+    transform: translateY(6px) scaleY(0.12) scaleX(1.35);
     opacity: 0;
   }
-  8% {
-    transform: scaleY(0.55) rotate(2deg);
+  12% {
+    transform: translateY(-8px) scaleY(0.62) scaleX(1.1);
     opacity: 0.95;
   }
-  16% {
-    transform: scaleY(1) rotate(-2deg);
+  26% {
+    transform: translateY(-20px) scaleY(1.05) scaleX(0.9);
     opacity: 0.96;
   }
-  34% {
-    transform: scaleY(1.06) rotate(-6deg) translateY(-3px);
-    opacity: 0.9;
+  42% {
+    transform: translateY(-24px) scaleY(1.16) scaleX(0.86) rotate(-4deg);
+    opacity: 0.94;
+  }
+  60% {
+    transform: translateY(-14px) scaleY(0.98) scaleX(1) rotate(-22deg);
+    opacity: 0.88;
+  }
+  80% {
+    transform: translateY(4px) scaleY(0.72) scaleX(1.24) rotate(-48deg);
+    opacity: 0.6;
   }
   100% {
-    transform: scaleY(0.72) rotate(-34deg) translateY(8px);
+    transform: translateY(16px) scaleY(0.5) scaleX(1.45) rotate(-72deg);
     opacity: 0;
   }
 }
 
-/* 中柱：涌出最高，随后正前瘫倒 */
+/* 中柱：涌出最高，多段果冻式起伏后大幅瘫倒贴面 */
 @keyframes squishyPumpC {
   0% {
-    transform: scaleY(0.1) rotate(0deg);
+    transform: translateY(6px) scaleY(0.12) scaleX(1.35);
     opacity: 0;
   }
-  8% {
-    transform: scaleY(0.7) rotate(0deg);
+  12% {
+    transform: translateY(-12px) scaleY(0.7) scaleX(1.08);
     opacity: 0.95;
   }
-  18% {
-    transform: scaleY(1.18) rotate(0deg);
+  28% {
+    transform: translateY(-28px) scaleY(1.2) scaleX(0.88);
     opacity: 0.96;
   }
-  40% {
-    transform: scaleY(1.1) rotate(6deg) translateY(-4px);
-    opacity: 0.9;
+  46% {
+    transform: translateY(-33px) scaleY(1.3) scaleX(0.84) rotate(2deg);
+    opacity: 0.94;
+  }
+  64% {
+    transform: translateY(-18px) scaleY(1) scaleX(1.04) rotate(18deg);
+    opacity: 0.86;
+  }
+  84% {
+    transform: translateY(4px) scaleY(0.68) scaleX(1.3) rotate(42deg);
+    opacity: 0.58;
   }
   100% {
-    transform: scaleY(0.66) rotate(22deg) translateY(10px);
+    transform: translateY(18px) scaleY(0.5) scaleX(1.5) rotate(62deg);
     opacity: 0;
   }
 }
 
-/* 右柱：错峰涌出，瘫向右侧 */
+/* 右柱：错峰涌出，缓缓倒向右侧 */
 @keyframes squishyPumpR {
   0% {
-    transform: scaleY(0.1) rotate(0deg);
+    transform: translateY(6px) scaleY(0.12) scaleX(1.35);
     opacity: 0;
   }
-  8% {
-    transform: scaleY(0.6) rotate(-2deg);
+  12% {
+    transform: translateY(-6px) scaleY(0.58) scaleX(1.12);
     opacity: 0.95;
   }
-  20% {
-    transform: scaleY(1.02) rotate(3deg);
+  28% {
+    transform: translateY(-18px) scaleY(1) scaleX(0.92);
     opacity: 0.96;
   }
-  44% {
-    transform: scaleY(1.04) rotate(8deg) translateY(-2px);
-    opacity: 0.9;
+  46% {
+    transform: translateY(-21px) scaleY(1.12) scaleX(0.88) rotate(5deg);
+    opacity: 0.94;
+  }
+  64% {
+    transform: translateY(-12px) scaleY(0.96) scaleX(1.04) rotate(22deg);
+    opacity: 0.86;
+  }
+  82% {
+    transform: translateY(4px) scaleY(0.7) scaleX(1.28) rotate(50deg);
+    opacity: 0.6;
   }
   100% {
-    transform: scaleY(0.7) rotate(38deg) translateY(6px);
+    transform: translateY(14px) scaleY(0.5) scaleX(1.48) rotate(76deg);
     opacity: 0;
   }
 }

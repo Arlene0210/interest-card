@@ -29,6 +29,12 @@ const LEVEL_RANK: Record<string, number> = {
   捏爆: 3,
 };
 
+/** 归一化档位名：去掉「Lv.1/Lv.2/Lv.3」前缀与空白，映射到标准档位 key */
+function normalizeLevelLabel(label: string): string {
+  const trimmed = label.replace(/^Lv\.\d+\s*/i, '').trim();
+  return LEVEL_RANK[trimmed] !== undefined ? trimmed : label;
+}
+
 /**
  * 捏捏乐解压记录服务（内存实现，demo 场景不依赖数据库）。
  * key 为用户 openId；未携带身份时使用匿名桶。
@@ -43,7 +49,8 @@ export class SquishyService {
     const key = openId && openId.length > 0 ? openId : 'anonymous';
     const relief = Number(dto?.relief) || 0;
     const count = Number(dto?.count) || 1;
-    const levelLabel = typeof dto?.levelLabel === 'string' ? dto.levelLabel : '轻捏';
+    const rawLabel = typeof dto?.levelLabel === 'string' ? dto.levelLabel : '轻捏';
+    const levelLabel = normalizeLevelLabel(rawLabel);
 
     const current = this.stats.get(key) ?? {
       totalRelief: 0,
