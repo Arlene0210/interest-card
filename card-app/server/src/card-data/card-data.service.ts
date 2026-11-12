@@ -8,6 +8,7 @@ const SQUISHY_CARD_DATA: CardData = {
   views: {
     initial: {
       hint: '长按捏瘪它 · 按得越久捏得越瘪',
+      renewLabel: '再捏一次',
       toys: [
         {
           id: 'toy-1',
@@ -76,31 +77,31 @@ const SQUISHY_CARD_DATA: CardData = {
         fillingLabel: '内馅',
         presets: [
           {
-            id: 'strawbear',
-            name: '草莓熊',
+            id: 'peachy',
+            name: '蜜桃团子',
             color: '#ffb3c1',
             shapeId: 'round',
             earId: 'round',
             fillingId: 'strawberry',
-            desc: '粉粉熊熊，草莓爆浆心',
+            desc: '粉嫩软团，头顶小圆耳',
           },
           {
-            id: 'ultraman',
-            name: '咸蛋超人',
-            color: '#ff5a5a',
+            id: 'cocoabun',
+            name: '可可方包',
+            color: '#b98a6b',
             shapeId: 'toast',
             earId: 'point',
-            fillingId: 'custard',
-            desc: '红银战衣，奶黄流心光',
+            fillingId: 'chocolate',
+            desc: '厚切脆皮方包，巧克力流心',
           },
           {
-            id: 'nailong',
-            name: '奶龙',
+            id: 'custardhorn',
+            name: '芝士角角',
             color: '#ffd45e',
             shapeId: 'onigiri',
             earId: 'horn',
             fillingId: 'custard',
-            desc: '黄黄小恐龙，奶香流心',
+            desc: '头顶小犄角的奶黄团',
           },
         ],
         shapes: [
@@ -117,13 +118,13 @@ const SQUISHY_CARD_DATA: CardData = {
           { id: 'horn', name: '犄角' },
         ],
         colors: [
-          { id: 'strawbear', name: '草莓粉', hex: '#ffb3c1' },
-          { id: 'ultraman', name: '超人红', hex: '#ff5a5a' },
-          { id: 'nailong', name: '奶龙黄', hex: '#ffd45e' },
+          { id: 'peach', name: '蜜桃粉', hex: '#ffb3c1' },
+          { id: 'berry', name: '莓果红', hex: '#ff5a5a' },
+          { id: 'cheese', name: '奶孚黄', hex: '#ffd45e' },
           { id: 'mint', name: '薄荷绿', hex: '#cef3e2' },
           { id: 'taro', name: '香芋紫', hex: '#e3d7ff' },
           { id: 'sky', name: '天空蓝', hex: '#cfe6ff' },
-          { id: 'choco', name: '巧克棕', hex: '#b98a6b' },
+          { id: 'cocoa', name: '可可棕', hex: '#b98a6b' },
           { id: 'cream', name: '奶油白', hex: '#fff0e0' },
         ],
         fillings: [

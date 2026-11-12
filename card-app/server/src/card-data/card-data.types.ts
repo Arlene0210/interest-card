@@ -136,6 +136,8 @@ export interface StackConfig {
 export interface InitialViewPayload {
   /** 玩法提示 */
   hint: string;
+  /** Footer 换新按钮文案（"再捏一次"） */
+  renewLabel: string;
   /** 玩具列表（3 款） */
   toys: SquishyToy[];
   /** 力度档位表 */

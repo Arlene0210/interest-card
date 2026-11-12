@@ -154,7 +154,7 @@
   margin-left: 1.5vw;
 }
 
-/* 主体玩区 */
+/* 主体玩区（书桌场景画框在其内，圆角裁切由场景面板自身处理，玩区不裁切以免碎片飞行被切断） */
 .squishy-playzone {
   position: relative;
   display: flex;
@@ -168,20 +168,192 @@
   min-height: 0;
 }
 
-/* 玩具投影（柔和径向渐变，无 filter） */
+/* ---------- 书桌场景背景（卧室书桌一角：暖墙 + 木桌面 + 摆件） ---------- */
+
+.squishy-scene {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 252, 245, 0.25);
+}
+
+/* 暖色墙面（上半区，纵向渐变 + 柔光） */
+.squishy-scene-wall {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 62%;
+  background: linear-gradient(180deg, #f3d9c3 0%, #eed2ba 55%, #e7c8ab 100%);
+}
+
+/* 桌面暖光（台灯光晕感） */
+.squishy-scene-glow {
+  position: absolute;
+  top: 4%;
+  left: 50%;
+  width: 76%;
+  height: 46%;
+  margin-left: -38%;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 244, 214, 0.85) 0%,
+    rgba(255, 244, 214, 0.35) 45%,
+    rgba(255, 244, 214, 0) 75%
+  );
+}
+
+/* 木桌面（下半区，横纹渐变） */
+.squishy-scene-desk {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 40%;
+  background: linear-gradient(180deg, #d9a97c 0%, #cf9c6d 35%, #c08a58 100%);
+}
+
+/* 桌沿高光线（桌面与墙的交界，加宽加亮确保可见） */
+.squishy-scene-desk-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 39.4%;
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 232, 190, 0) 0%,
+    rgba(255, 232, 190, 0.9) 15%,
+    rgba(255, 224, 175, 1) 50%,
+    rgba(255, 232, 190, 0.9) 85%,
+    rgba(255, 232, 190, 0) 100%
+  );
+  box-shadow: 0 1px 2px rgba(120, 70, 35, 0.25);
+}
+
+/* 左侧小盆栽（墙面置物搁板上的远景小景，避开双手遮挡区） */
+.squishy-scene-plant {
+  position: absolute;
+  top: 5%;
+  left: 7%;
+  width: 14%;
+  height: 17%;
+}
+
+.squishy-scene-leaf {
+  position: absolute;
+  border-radius: 58% 42% 55% 45% / 62% 58% 42% 38%;
+  background: linear-gradient(160deg, #9cc49a 0%, #7fae7d 100%);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.35);
+}
+
+.squishy-scene-leaf-1 {
+  top: 0;
+  left: 18%;
+  width: 64%;
+  height: 46%;
+  transform: rotate(-24deg);
+}
+
+.squishy-scene-leaf-2 {
+  top: 8%;
+  left: 0;
+  width: 52%;
+  height: 42%;
+  transform: rotate(38deg);
+}
+
+.squishy-scene-leaf-3 {
+  top: 18%;
+  left: 34%;
+  width: 46%;
+  height: 38%;
+  transform: rotate(-6deg);
+}
+
+.squishy-scene-pot {
+  position: absolute;
+  bottom: 0;
+  left: 24%;
+  width: 52%;
+  height: 30%;
+  border-radius: 16% 16% 22% 22% / 30% 30% 46% 46%;
+  background: linear-gradient(180deg, #d98f6a 0%, #b9734f 100%);
+  box-shadow: inset 0 2px 3px rgba(255, 255, 255, 0.3);
+}
+
+/* 墙面置物搁板（横贯木条，盆栽与书堆坐落在搁板上，避开双手遮挡区） */
+.squishy-scene-shelf {
+  position: absolute;
+  top: 21%;
+  left: 4%;
+  width: 42%;
+  height: 2.6%;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #c98f5e 0%, #a86f45 100%);
+  box-shadow: 0 2px 4px rgba(90, 55, 30, 0.35);
+}
+
+/* 右侧书堆（坐落在搁板上，远景摆件） */
+.squishy-scene-books {
+  position: absolute;
+  top: 13%;
+  right: 10%;
+  width: 22%;
+  height: 16%;
+}
+
+.squishy-scene-book {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 30%;
+  border-radius: 3px;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.28), 0 1px 2px rgba(90, 60, 40, 0.3);
+}
+
+.squishy-scene-book-1 {
+  bottom: 0;
+  background: linear-gradient(90deg, #e58f8f 0%, #d97a7a 100%);
+  transform: rotate(-3deg);
+}
+
+.squishy-scene-book-2 {
+  bottom: 32%;
+  background: linear-gradient(90deg, #8fb3e5 0%, #7aa0d4 100%);
+  transform: rotate(1.5deg);
+}
+
+.squishy-scene-book-3 {
+  bottom: 64%;
+  left: 8%;
+  width: 84%;
+  height: 28%;
+  background: linear-gradient(90deg, #e5c98f 0%, #d8b878 100%);
+  transform: rotate(-2deg);
+}
+
+/* 玩具投影（柔和径向渐变，无 filter；落在桌面场景上） */
 .squishy-shadow {
   position: absolute;
-  bottom: 6%;
+  bottom: 12%;
   left: 50%;
-  width: 46%;
-  height: 3.5vh;
-  margin-left: -23%;
+  width: 52%;
+  height: 3.2vh;
+  margin-left: -26%;
   border-radius: 999px;
   background: radial-gradient(
     ellipse at center,
-    rgba(22, 24, 35, 0.22) 0%,
-    rgba(22, 24, 35, 0) 70%
+    rgba(90, 50, 25, 0.3) 0%,
+    rgba(90, 50, 25, 0) 70%
   );
+  z-index: 1;
 }
 
 /* 叠捏堆叠容器（首只在文档流居中，其余按蜂窝坐标绝对定位叠放） */
@@ -196,6 +368,7 @@
   flex-shrink: 1;
   flex-basis: 0;
   min-height: 0;
+  z-index: 2;
 }
 
 /* 捏捏球主体（蜡皮壳）：泛白底色 + 主色晕染层（颜色、宽度、高度与形变由 TSX 内联提供） */
@@ -460,14 +633,14 @@
 }
 
 /* 爆浆内馅芯（颜色、圆角与过渡由 TSX 内联提供；定位靠内联 translate(-50%,-50%)，不叠加 margin 位移）
-   捏爆前完全透明（藏于蜡皮下）；捏爆时序：碎裂（0-0.32s）→ 馅料涌出（0.32s 起，内联延迟过渡）
+   常驻挂载但捏爆前完全透明（蜡皮未破看不见）；锚定在主裂缝口，捏爆时作为主涌出馅团
    爆浆形态为不规则 ooze 圆角，体现馅料黏稠拉扯 */
 .squishy-filling-core {
   position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 44%;
-  height: 44%;
+  left: 52%;
+  top: 30%;
+  width: 42%;
+  height: 38%;
   border-radius: 50%;
   box-shadow: inset 0 -0.8vh 1.6vh rgba(0, 0, 0, 0.18);
 }
@@ -1583,6 +1756,296 @@
   }
 }
 
+/* ---------- 双手（第一人称视角托捏，按压时向内捏合） ---------- */
+
+/* 单手：掌 + 拇指 + 三指节（CSS 结构件拼装），定位与位移由 TSX 内联提供 */
+.squishy-hand {
+  position: absolute;
+  z-index: 9;
+  transition: transform 0.16s ease-out;
+}
+
+/* 按压中：手指向内收（捏合），拇指同时下压 */
+.squishy-hand.is-gripping {
+  transition: transform 0.1s ease-out;
+}
+
+/* 捏爆瞬间：手被爆浆冲击微微外弹一下（不改变捏合位置） */
+.squishy-hand.is-bursting {
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.35, 1);
+}
+
+/* 掌心（肤色圆角梯形，带内侧阴影表达卷握） */
+.squishy-hand-palm {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 44% 40% 34% 38% / 40% 42% 52% 46%;
+  background: linear-gradient(165deg, #ffe3cf 0%, #f7c9a8 58%, #eeb58f 100%);
+  box-shadow:
+    inset 0 -6px 12px rgba(190, 120, 80, 0.28),
+    inset 0 4px 8px rgba(255, 255, 255, 0.45),
+    0 4px 10px rgba(60, 30, 15, 0.3);
+}
+
+/* 拇指（从掌侧伸向球体，卷握关键件） */
+.squishy-hand-thumb {
+  position: absolute;
+  bottom: 8%;
+  left: -14%;
+  width: 52%;
+  height: 34%;
+  border-radius: 46% 50% 58% 44% / 55% 60% 40% 45%;
+  background: linear-gradient(150deg, #ffe8d6 0%, #f5c4a2 100%);
+  transform: rotate(-18deg);
+  box-shadow:
+    inset 0 2px 4px rgba(255, 255, 255, 0.5),
+    inset 0 -3px 6px rgba(190, 120, 80, 0.25);
+}
+
+/* 右手拇指镜像 */
+.squishy-hand-thumb-r {
+  left: auto;
+  right: -14%;
+  transform: rotate(18deg);
+}
+
+/* 三指节（掌背上方三段手指，卷在球侧） */
+.squishy-hand-knuckle {
+  position: absolute;
+  border-radius: 42% 46% 50% 44% / 48% 52% 46% 50%;
+  background: linear-gradient(160deg, #ffe8d6 0%, #f2bfa0 100%);
+  box-shadow:
+    inset 0 2px 3px rgba(255, 255, 255, 0.5),
+    inset 0 -2px 4px rgba(190, 120, 80, 0.22);
+}
+
+.squishy-hand-knuckle-1 {
+  top: 2%;
+  left: 8%;
+  width: 46%;
+  height: 26%;
+  transform: rotate(-8deg);
+}
+
+.squishy-hand-knuckle-2 {
+  top: 10%;
+  left: -2%;
+  width: 40%;
+  height: 24%;
+  transform: rotate(-20deg);
+}
+
+.squishy-hand-knuckle-3 {
+  top: 20%;
+  left: -10%;
+  width: 36%;
+  height: 22%;
+  transform: rotate(-32deg);
+}
+
+/* 右手指节镜像（翻转朝向，不整卡 scale 避免文字/渐变反向） */
+.squishy-hand-right .squishy-hand-knuckle-1 {
+  left: auto;
+  right: 8%;
+  transform: rotate(8deg);
+}
+
+.squishy-hand-right .squishy-hand-knuckle-2 {
+  left: auto;
+  right: -2%;
+  transform: rotate(20deg);
+}
+
+.squishy-hand-right .squishy-hand-knuckle-3 {
+  left: auto;
+  right: -10%;
+  transform: rotate(32deg);
+}
+
+/* ---------- 裂缝渗馅/泵浆（与按压同步，无回弹） ---------- */
+
+/* 渗馅泉眼容器（挂在球体内，随球体一起形变） */
+.squishy-ooze-wrap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 3;
+}
+
+/* 单处泉眼：位置对应 6 条裂缝口，颜色/透明度/缩放由 TSX 内联（随按压进度同步） */
+.squishy-ooze {
+  position: absolute;
+  width: 22%;
+  height: 16%;
+  border-radius: 52% 48% 55% 45% / 58% 52% 48% 42%;
+  box-shadow:
+    inset 0 -2px 4px rgba(0, 0, 0, 0.18),
+    inset 0 2px 3px rgba(255, 255, 255, 0.4);
+  transition: opacity 0.18s ease-out;
+}
+
+/* 各泉眼位置与六条裂缝口对应（略偏裂缝端点，湿润堆积感） */
+.squishy-ooze-0 {
+  left: 30%;
+  top: 26%;
+}
+
+.squishy-ooze-1 {
+  left: 46%;
+  top: 15%;
+}
+
+.squishy-ooze-2 {
+  left: 24%;
+  top: 46%;
+}
+
+.squishy-ooze-3 {
+  left: 52%;
+  top: 21%;
+}
+
+.squishy-ooze-4 {
+  left: 18%;
+  top: 60%;
+}
+
+.squishy-ooze-5 {
+  left: 54%;
+  top: 60%;
+}
+
+/* 捏爆瞬间泉眼放大成涌出泉（burst 修饰类） */
+.squishy-ooze.is-burst {
+  transition: opacity 0.12s ease-out;
+}
+
+/* ---------- 裂缝泵浆柱（捏爆时从主裂缝向上泵出，涌出后瘫软下垂） ---------- */
+
+.squishy-pump-wrap {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  z-index: 8;
+}
+
+/* 单根浆柱：细长馅料从裂缝口竖直泵出，达到最高点后整体前倾瘫软（无回弹，慢3s 收尾） */
+.squishy-pump {
+  position: absolute;
+  width: 13px;
+  height: 54px;
+  margin-left: -6.5px;
+  margin-top: -46px;
+  border-radius: 44% 46% 42% 48% / 12% 14% 86% 88%;
+  box-shadow:
+    inset 0 -3px 6px rgba(0, 0, 0, 0.2),
+    inset 0 2px 4px rgba(255, 255, 255, 0.35);
+  transform-origin: 50% 100%;
+  animation-duration: 2.8s;
+  animation-timing-function: cubic-bezier(0.2, 0.85, 0.45, 0.6);
+  animation-fill-mode: both;
+  animation-iteration-count: 1;
+  opacity: 0;
+}
+
+/* 三根浆柱：从三条主裂缝口泵出，各带错峰延迟 */
+.squishy-pump-0 {
+  margin-left: -34px;
+  animation-name: squishyPumpL;
+  animation-delay: 0.18s;
+}
+
+.squishy-pump-1 {
+  margin-left: 0;
+  animation-name: squishyPumpC;
+  animation-delay: 0.26s;
+}
+
+.squishy-pump-2 {
+  margin-left: 24px;
+  animation-name: squishyPumpR;
+  animation-delay: 0.12s;
+}
+
+/* 左柱：快速涌出 → 顶端膨胀 → 整体瘫向左侧（倒伏） */
+@keyframes squishyPumpL {
+  0% {
+    transform: scaleY(0.1) rotate(0deg);
+    opacity: 0;
+  }
+  8% {
+    transform: scaleY(0.55) rotate(2deg);
+    opacity: 0.95;
+  }
+  16% {
+    transform: scaleY(1) rotate(-2deg);
+    opacity: 0.96;
+  }
+  34% {
+    transform: scaleY(1.06) rotate(-6deg) translateY(-3px);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scaleY(0.72) rotate(-34deg) translateY(8px);
+    opacity: 0;
+  }
+}
+
+/* 中柱：涌出最高，随后正前瘫倒 */
+@keyframes squishyPumpC {
+  0% {
+    transform: scaleY(0.1) rotate(0deg);
+    opacity: 0;
+  }
+  8% {
+    transform: scaleY(0.7) rotate(0deg);
+    opacity: 0.95;
+  }
+  18% {
+    transform: scaleY(1.18) rotate(0deg);
+    opacity: 0.96;
+  }
+  40% {
+    transform: scaleY(1.1) rotate(6deg) translateY(-4px);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scaleY(0.66) rotate(22deg) translateY(10px);
+    opacity: 0;
+  }
+}
+
+/* 右柱：错峰涌出，瘫向右侧 */
+@keyframes squishyPumpR {
+  0% {
+    transform: scaleY(0.1) rotate(0deg);
+    opacity: 0;
+  }
+  8% {
+    transform: scaleY(0.6) rotate(-2deg);
+    opacity: 0.95;
+  }
+  20% {
+    transform: scaleY(1.02) rotate(3deg);
+    opacity: 0.96;
+  }
+  44% {
+    transform: scaleY(1.04) rotate(8deg) translateY(-2px);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scaleY(0.7) rotate(38deg) translateY(6px);
+    opacity: 0;
+  }
+}
+
 /* ---------- 底部叠捏数量控制条（− 数字 +，实时步进） ---------- */
 
 .squishy-stepbar {
@@ -2104,6 +2567,14 @@
   white-space: nowrap;
 }
 
+/* DIY 预览内馅芯覆盖：预览球内居中展示（覆盖玩区主裂口锚定定位） */
+.squishy-diy-preview .squishy-filling-core {
+  left: 50%;
+  top: 50%;
+  width: 44%;
+  height: 44%;
+}
+
 /* 确认按钮 */
 .squishy-diy-confirm {
   display: flex;
@@ -2225,40 +2696,66 @@
   white-space: nowrap;
 }
 
-/* 换新按钮 */
-.squishy-renew {
+/* ---------- 主操作行：DIY 捏捏 + 再捏一次（并排双钮） ---------- */
+
+.squishy-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: center;
+  width: 100%;
+  gap: 2vw;
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: auto;
+}
+
+/* 单钮（等分占满整行） */
+.squishy-action {
   box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  min-height: 10vh;
-  height: 10vh;
-  padding: 0 4.3vw;
+  width: 50%;
+  min-height: 8.6vh;
+  padding: 0 2.6vw;
   border-radius: var(--radius-xl);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  flex-grow: 0;
-  flex-shrink: 0;
-  flex-basis: 10vh;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
 }
 
-.squishy-renew.is-ready {
+/* DIY 捏捏：暖奶油底 */
+.squishy-action-diy {
+  background: rgba(255, 240, 198, 0.92);
+  border: 1px solid rgba(255, 214, 130, 0.9);
+}
+
+.squishy-action-diy .squishy-action-text {
+  color: #5c3d14;
+  font-weight: 700;
+}
+
+/* 再捏一次：捏过之后点亮软粉 */
+.squishy-action-renew.is-ready {
   background: #ff8fab;
   border: 1px solid #ff8fab;
 }
 
-.squishy-renew.is-ready .squishy-renew-text {
+.squishy-action-renew.is-ready .squishy-action-text {
   color: #31141d;
-  font-weight: 600;
+  font-weight: 700;
 }
 
-.squishy-renew-text {
+.squishy-action-text {
   color: var(--text-secondary);
-  font-size: 1rem;
+  font-size: 0.9375rem;
   font-weight: 500;
-  line-height: 1.375rem;
+  line-height: 1.3125rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-align: center;
 }
