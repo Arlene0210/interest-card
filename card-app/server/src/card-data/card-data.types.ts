@@ -171,6 +171,14 @@ export interface CardData {
   views: CardDataViews;
   userState?: {
     hasExpanded?: boolean;
+    /** 服务端已知的用户累计统计（卡片进入时回读接续，避免重复累计起点归零） */
+    totalRelief?: number;
+    /** 累计捏捏次数 */
+    pressCount?: number;
+    /** 最高压力等级档位名 */
+    bestLevel?: string;
+    /** 最近一次捏压的力度档位名（落地页延续「最近一次操作」） */
+    lastLevel?: string;
   };
   meta?: {
     source?: string;

@@ -18,6 +18,8 @@ export interface SquishyUserStats {
   pressCount: number;
   /** 最高力度档位名 */
   bestLevel: string;
+  /** 最近一次捏压的力度档位名 */
+  lastLevel: string;
   /** 最近一次游玩时间戳 */
   lastPlayedAt: number;
 }
@@ -56,6 +58,7 @@ export class SquishyService {
       totalRelief: 0,
       pressCount: 0,
       bestLevel: '—',
+      lastLevel: '—',
       lastPlayedAt: 0,
     };
 
@@ -64,6 +67,7 @@ export class SquishyService {
     if ((LEVEL_RANK[levelLabel] ?? 0) > (LEVEL_RANK[current.bestLevel] ?? 0)) {
       current.bestLevel = levelLabel;
     }
+    current.lastLevel = levelLabel;
     current.lastPlayedAt = Date.now();
 
     this.stats.set(key, current);

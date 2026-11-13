@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { SquishyService } from '../squishy/squishy.service';
 import type { CardData } from './card-data.types';
 
 /** 捏捏乐静态玩法配置（玩具与力度档位） */
@@ -157,12 +158,26 @@ const SQUISHY_CARD_DATA: CardData = {
 
 @Injectable()
 export class CardDataService {
+  constructor(private readonly squishyService: SquishyService) {}
+
   /**
    * 组装 CardData payload。
-   * 玩具与力度档位为静态玩法配置（无个性化数据），直接返回完整配置。
+   * 玩具与力度档位为静态玩法配置；userState 注入服务端已知用户累计统计，
+   * 卡片进入时回读接续（解压值/次数/最高档不归零），落地页报告可延续。
    */
-  buildCardData(_openId?: string, _delegateToken?: string): CardData {
-    return SQUISHY_CARD_DATA;
+  buildCardData(openId?: string, _delegateToken?: string): CardData {
+    const { data: stats } = this.squishyService.getStats(openId);
+    const userState: CardData['userState'] = stats
+      ? {
+          hasExpanded: false,
+          totalRelief: stats.totalRelief,
+          pressCount: stats.pressCount,
+          bestLevel: stats.bestLevel,
+          lastLevel: stats.lastLevel,
+        }
+      : { hasExpanded: false };
+    // 浅拷贝静态配置再覆写 userState，避免共享常量被运行时污染
+    return { ...SQUISHY_CARD_DATA, userState };
   }
 
   buildDyCardResponse(openId?: string, delegateToken?: string): { success: boolean; data: string } {

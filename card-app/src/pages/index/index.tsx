@@ -14,6 +14,7 @@ interface SquishyStats {
   totalRelief: number
   pressCount: number
   bestLevel: string
+  lastLevel: string
   lastPlayedAt: number
 }
 
@@ -131,8 +132,22 @@ export default function Index() {
         ) : stats ? (
           (() => {
             const profile = getLevelProfile(stats.bestLevel)
+            const lastProfile = getLevelProfile(stats.lastLevel)
             return (
               <View className="rounded-2xl bg-gradient-to-br from-[#ffe6d8] via-[#fff3e8] to-[#cef3e2] p-5">
+                {/* 最近一次操作行：延续卡上刚完成的捏压（无记录时隐藏） */}
+                {stats.lastLevel && stats.lastLevel !== '—' ? (
+                  <View className="mb-3 flex items-center gap-2 rounded-xl bg-white/70 px-3.5 py-2.5">
+                    <Text className="shrink-0 text-sm leading-6">👋</Text>
+                    <Text className="min-w-0 flex-1 text-xs leading-5 text-[#9c8b7d]">
+                      刚才在卡片上
+                      <Text className="font-medium text-[#16181f]">
+                        {`「${stats.lastLevel}」`}
+                      </Text>
+                      {`捏了一把（${lastProfile.tag}）——数据已同步，不用重捏～`}
+                    </Text>
+                  </View>
+                ) : null}
                 {/* 压力等级行 */}
                 <View className="flex items-center gap-2.5 rounded-xl bg-white/70 px-3.5 py-3">
                   <View className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#ffe1ea]">

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { View, Text, Input } from "@tarojs/components";
-import { useLoad, useCardTaro } from "@tarojs/taro";
+import { useDidHide, useLoad, useCardTaro, useUnload } from "@tarojs/taro";
 import {
   extractOpenCardLoadData,
   resolveCardData,
@@ -18,8 +18,8 @@ const POWER_TICK_MS = 80;
 const POWER_STEP = 8;
 /** 反馈文案展示时长（ms） */
 const FEEDBACK_MS = 1600;
-/** 解压值上报节流间隔（ms） */
-const REPORT_THROTTLE_MS = 1200;
+/** 解压值上报节流间隔（ms）：窗口尽量短，配合隐藏冲账避免跳转丢增量 */
+const REPORT_THROTTLE_MS = 400;
 /** 叠捏连播音效基础间隔（ms，数量越大越密） */
 const STACK_SOUND_GAP_MS = 55;
 /** 爆裂动画总时长（ms）：蜡皮碎裂飞散 0-1.1s（抛物弧线）→ 馅料从裂缝泵出 0.3-1.9s（流动瘫软） */
@@ -254,6 +254,7 @@ export default function IndexPage() {
   const reportTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingReportRef = useRef(0);
   const lastReportAtRef = useRef(0);
+  const lastLevelRef = useRef<string>(""); // 最近一次捏压档位（隐藏冲账/落地页延续用）
   const currentToyRef = useRef<SquishyToy | null>(null);
   const powerRef = useRef(0);
   const pressingRef = useRef(false);
@@ -314,6 +315,34 @@ export default function IndexPage() {
     if (data) {
       setCardData(data);
       setLoadError(false);
+      // 回读服务端已知的累计统计：卡片再次进入时接续累计（解压值/次数/最高档不归零），
+      // 与落地页报告同源同口径，避免「卡上捏了、页里看不到；页里看了、卡上又归零」的割裂
+      const userState = data.userState;
+      if (userState) {
+        const serverRelief = Number(userState.totalRelief);
+        const serverPress = Number(userState.pressCount);
+        if (Number.isFinite(serverRelief) && serverRelief > 0) {
+          reliefRef.current = serverRelief;
+          setRelief(serverRelief);
+        }
+        if (Number.isFinite(serverPress) && serverPress > 0) {
+          pressCountRef.current = serverPress;
+          setPressCount(serverPress);
+        }
+        const serverBest = userState.bestLevel;
+        if (typeof serverBest === "string" && serverBest.length > 0 && serverBest !== "—") {
+          // bootstrap 时机早于 cardData state 更新：直接用本次 data 的档位表换算排名
+          const levelsNow = data.views?.initial?.levels ?? [];
+          const rank = levelsNow.findIndex(
+            (item) => item.label === serverBest || item.label.endsWith(serverBest),
+          );
+          if (rank >= 0 && rank > bestRankRef.current) {
+            bestRankRef.current = rank;
+            // 用档位表原始 label（含 Lv. 前缀）保持卡片文案一致
+            setBestLabel(levelsNow[rank].label);
+          }
+        }
+      }
     } else {
       setLoadError(true);
     }
@@ -497,12 +526,14 @@ const playSfxOnce = (taro: openCardTaro | null, src: string, rate: number, volum
   const reportSqueeze = useCallback(
     (level: SqueezeLevel, gain: number, count: number) => {
       pendingReportRef.current += gain;
+      // 记录最近一次档位：隐藏兜底冲账与落地页「最近一次操作」都用它
+      lastLevelRef.current = level.label;
       const now = Date.now();
       if (now - lastReportAtRef.current < REPORT_THROTTLE_MS) {
         if (!reportTimerRef.current) {
           reportTimerRef.current = setTimeout(() => {
             reportTimerRef.current = null;
-            flushReport(level.label, stackCountRef.current);
+            flushReport(lastLevelRef.current, stackCountRef.current);
           }, REPORT_THROTTLE_MS);
         }
         return;
@@ -511,6 +542,28 @@ const playSfxOnce = (taro: openCardTaro | null, src: string, rate: number, volum
     },
     [flushReport],
   );
+
+  /** 卡片隐藏（用户滑走/进入落地页）时立即冲账：把节流窗口内未上报的增量落库，避免丢数 */
+  useDidHide(() => {
+    if (reportTimerRef.current) {
+      clearTimeout(reportTimerRef.current);
+      reportTimerRef.current = null;
+    }
+    if (pendingReportRef.current > 0) {
+      flushReport(lastLevelRef.current || "轻捏", stackCountRef.current);
+    }
+  });
+
+  /** 卡片卸载时同样冲账兜底（进程回收等极端场景） */
+  useUnload(() => {
+    if (reportTimerRef.current) {
+      clearTimeout(reportTimerRef.current);
+      reportTimerRef.current = null;
+    }
+    if (pendingReportRef.current > 0) {
+      flushReport(lastLevelRef.current || "轻捏", stackCountRef.current);
+    }
+  });
 
   /** 清理爆裂计时器并复位爆裂态 */
   const cancelBurst = useCallback(() => {
