@@ -2229,7 +2229,9 @@
   display: flex;
   align-items: center;
   width: 62%;
-  height: 2.6vh;
+  /* 高度容纳标签行高（标签 0.6875rem/0.9375rem 行高 + 上下内边距），避免文字上下被裁 */
+  height: 3.4vh;
+  min-height: 22px;
   margin-top: 1.8vh;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.14);
@@ -2253,9 +2255,9 @@
   width: 100%;
   text-align: center;
   color: rgba(22, 24, 35, 0.9);
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   font-weight: 700;
-  line-height: 1.0625rem;
+  line-height: 0.9375rem;
 }
 
 /* 松手反馈气泡 */
