@@ -2372,8 +2372,8 @@
   flex-shrink: 1;
   flex-basis: 0;
   min-height: 0;
-  padding: 1.6vh 3vw;
-  gap: 1.2vh;
+  padding: 1.2vh 3vw 1vh;
+  gap: 0.9vh;
   border-radius: 12px;
   background: rgba(255, 249, 244, 0.98);
 }
@@ -2415,7 +2415,7 @@
   line-height: 15px;
 }
 
-/* 主体：左预览 + 右配置行 */
+/* 主体：左预览 + 右配置行（预览区可纵向收缩：以行高为上限，不与确认钮争抢空间） */
 .squishy-diy-main {
   display: flex;
   flex-direction: row;
@@ -2433,10 +2433,11 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  /* 预览区不再锁死正方形：宽度上限 27%，高度自适应剩余空间（min(宽, 高) 由内部 aspect-ratio 承担） */
   width: 27%;
-  aspect-ratio: 1 / 1;
+  max-height: 100%;
   flex-grow: 0;
-  flex-shrink: 0;
+  flex-shrink: 1;
   flex-basis: auto;
 }
 
@@ -2463,7 +2464,7 @@
   border-radius: 46% 46% 40% 40% / 62% 62% 30% 30%;
 }
 
-/* 配置行区 */
+/* 配置行区（行距收紧：5 行配置 + 确认钮全部落在弹层内） */
 .squishy-diy-rows {
   display: flex;
   flex-direction: column;
@@ -2474,7 +2475,7 @@
   flex-shrink: 1;
   flex-basis: 0;
   min-width: 0;
-  gap: 0.9vh;
+  gap: 0.7vh;
 }
 
 .squishy-diy-row {
@@ -2512,13 +2513,13 @@
   min-width: 0;
 }
 
-/* 形状/内馅/层数选项（含图标与文字） */
+/* 形状/内馅/层数选项（含图标与文字；内边距收紧防纵向超高） */
 .squishy-diy-option {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 0.5vh 1.4vw;
+  padding: 0.35vh 1.4vw;
   border-radius: 10px;
   border: 1px solid rgba(122, 82, 62, 0.18);
   background: rgba(255, 255, 255, 0.7);
@@ -2672,13 +2673,13 @@
   height: 44%;
 }
 
-/* 确认按钮 */
+/* 确认按钮（高度收敛：为上方配置行让出空间，杜绝内容被按钮盖住） */
 .squishy-diy-confirm {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: 5.4vh;
+  min-height: 4.6vh;
   border-radius: 999px;
   background: #ff8fab;
   box-shadow: 0 0.8vh 2vh rgba(255, 143, 171, 0.4);
