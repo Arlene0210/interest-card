@@ -26,33 +26,63 @@ interface GameEntry {
   path: string
 }
 
-/** 压力等级画像：按最高力度档位给出俏皮解释 + 解压建议（用语俏皮有趣） */
-const LEVEL_PROFILES: Record<string, { emoji: string; tag: string; explain: string; advice: string }> = {
-  轻捏: {
-    emoji: '🫧',
-    tag: '指尖SPA级',
-    explain: '温柔一捏，蜻蜓点水～你的手指刚做完一场迷你马杀鸡，情绪毫无波动甚至想哼歌。',
-    advice: '下次试试按住不放，攒到力度条满格，体验一把「砰」的快意！',
-  },
-  用力捏: {
-    emoji: '💪',
-    tag: '高压释放级',
-    explain: '深呼吸、咬紧牙、狠狠一攥——压力顺着指尖 biu 地飞出去了，蜡皮都替你捏出了裂纹。',
-    advice: '离「捏爆」只差临门一脚，长按再坚持一秒，把烦恼连壳捏碎！',
-  },
-  捏爆: {
-    emoji: '💥',
-    tag: '彻底爆浆级',
-    explain: '砰——！内馅四溅、蜡皮崩飞，你的压力也跟着原地蒸发，这波解压非常彻底。',
-    advice: '火力全开的同时也记得心疼下捏捏，换只新的或 DIY 一只新造型，快乐可持续～',
-  },
+/** 压力等级档（按累计解压值从轻到重，各档名 + 俏皮解释 + 解压建议） */
+interface ReliefTier {
+  /** 累计解压值下限（含） */
+  min: number
+  /** 等级名（从轻到重） */
+  name: string
+  emoji: string
+  /** 俏皮解释 */
+  explain: string
+  /** 解压建议 */
+  advice: string
 }
 
-/** 查询压力等级画像（未游玩/未知档位回退引导文案） */
-const getLevelProfile = (bestLevel: string) =>
-  LEVEL_PROFILES[bestLevel] ?? {
+const RELIEF_TIERS: ReliefTier[] = [
+  {
+    min: 1000,
+    name: '解压狂人',
+    emoji: '🏆',
+    explain: '千锤百炼的指尖战神！累计解压值破千，你的捏捏已经捏出了包浆，压力在你面前毫无还手之力。',
+    advice: '劳模就是你了～劳逸结合，偶尔也去泡泡纸和香皂那边团建一下？',
+  },
+  {
+    min: 400,
+    name: '资深捏捏家',
+    emoji: '🎯',
+    explain: '四百点解压值入账，你已经是捏捏乐的常客。蜡皮的每一声脆响，都是压力碎掉的声音。',
+    advice: '手感已经练出来了，试试 DIY 一只专属造型，把解压捏出个人风格！',
+  },
+  {
+    min: 150,
+    name: '熟练解压手',
+    emoji: '💪',
+    explain: '累计解压值稳步上涨，你摸清了捏捏的脾气：什么时候轻抚、什么时候狠捏，门儿清。',
+    advice: '继续攒！下一个百点里程碑就在眼前，坚持捏就是胜利。',
+  },
+  {
+    min: 50,
+    name: '入门捏捏生',
+    emoji: '🫧',
+    explain: '刚上手不久，累计五十点解压值入袋。捏捏乐的新手村大门已经为你敞开。',
+    advice: '长按不松手可以攒大力，力度条拉满试试「捏爆」的爽感！',
+  },
+  {
+    min: 1,
+    name: '初来乍到',
     emoji: '🧸',
-    tag: '待开张',
+    explain: '解压档案刚刚开张，第一次捏捏的脆响还在耳边。万事开头甜，接下来会越来越上头。',
+    advice: '回到信息流多捏几把，解压值攒起来就能升到下一档！',
+  },
+]
+
+/** 按累计解压值查询压力等级档（从重到轻找首个命中；无记录时返回引导档） */
+const getReliefTier = (totalRelief: number): ReliefTier =>
+  RELIEF_TIERS.find((tier) => totalRelief >= tier.min) ?? {
+    min: 0,
+    name: '待开张',
+    emoji: '🧸',
     explain: '还没有捏爆过任何一只捏捏，情绪小怪兽正在排队等你出手。',
     advice: '回到信息流长按捏一捏，先攒个「轻捏」热热身！',
   }
@@ -131,44 +161,30 @@ export default function Index() {
           </View>
         ) : stats ? (
           (() => {
-            const profile = getLevelProfile(stats.bestLevel)
-            const lastProfile = getLevelProfile(stats.lastLevel)
+            const tier = getReliefTier(stats.totalRelief)
             return (
               <View className="rounded-2xl bg-gradient-to-br from-[#ffe6d8] via-[#fff3e8] to-[#cef3e2] p-5">
-                {/* 最近一次操作行：延续卡上刚完成的捏压（无记录时隐藏） */}
-                {stats.lastLevel && stats.lastLevel !== '—' ? (
-                  <View className="mb-3 flex items-center gap-2 rounded-xl bg-white/70 px-3.5 py-2.5">
-                    <Text className="shrink-0 text-sm leading-6">👋</Text>
-                    <Text className="min-w-0 flex-1 text-xs leading-5 text-[#9c8b7d]">
-                      刚才在卡片上
-                      <Text className="font-medium text-[#16181f]">
-                        {`「${stats.lastLevel}」`}
-                      </Text>
-                      {`捏了一把（${lastProfile.tag}）——数据已同步，不用重捏～`}
-                    </Text>
-                  </View>
-                ) : null}
-                {/* 压力等级行 */}
+                {/* 压力等级行：按累计解压值从轻到重分档 */}
                 <View className="flex items-center gap-2.5 rounded-xl bg-white/70 px-3.5 py-3">
                   <View className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#ffe1ea]">
-                    <Text className="text-xl leading-7">{profile.emoji}</Text>
+                    <Text className="text-xl leading-7">{tier.emoji}</Text>
                   </View>
                   <View className="min-w-0 flex-1">
                     <Text className="block text-xs text-[#9c8b7d]">压力等级</Text>
                     <Text className="block text-base font-semibold leading-6 text-[#16181f]">
-                      {`${stats.bestLevel === '—' ? '还没捏过' : stats.bestLevel} · ${profile.tag}`}
+                      {`${tier.name} · 累计解压值 ${stats.totalRelief}`}
                     </Text>
                   </View>
                 </View>
-                {/* 俏皮解释 */}
+                {/* 俏皮解释（随等级变化） */}
                 <Text className="mt-3 block text-sm leading-6 text-[#5f5347]">
-                  {profile.explain}
+                  {tier.explain}
                 </Text>
-                {/* 解压建议 */}
+                {/* 解压建议（随等级变化） */}
                 <View className="mt-3 flex items-start gap-2 rounded-xl bg-[#fff7e6] px-3.5 py-2.5">
                   <Text className="shrink-0 text-sm leading-6">💡</Text>
                   <Text className="min-w-0 flex-1 text-sm leading-6 text-[#8a6a2f]">
-                    {profile.advice}
+                    {tier.advice}
                   </Text>
                 </View>
                 <View className="mt-4 flex items-end justify-between">
