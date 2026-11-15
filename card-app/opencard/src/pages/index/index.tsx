@@ -1265,192 +1265,6 @@ const playSfxOnce = (taro: openCardTaro | null, src: string, rate: number, volum
               </View>
             </View>
 
-            {/* DIY 拼装形象工坊（覆盖主玩区，Footer 同步隐藏） */}
-            {diyOpen && diy ? (
-              <View className="squishy-diy-overlay">
-                <View className="squishy-diy-panel">
-                  <View className="squishy-diy-head">
-                    <Text className="squishy-diy-title">{diy.title}</Text>
-                    <View className="squishy-diy-close" onClick={handleCloseDiy}>
-                      <Text className="squishy-diy-close-text">收起</Text>
-                    </View>
-                  </View>
-                  <View className="squishy-diy-main">
-                    {/* 实时拼装预览 */}
-                    <View className="squishy-diy-preview-wrap">
-                      <View
-                        className={`squishy-diy-preview squishy-shape-${previewShape}`}
-                        style={
-                          previewShape === "heart"
-                            ? "background-color: transparent;"
-                            : `background-color: ${mixHexColor(previewColor, "#ffffff", WAX_MIX_RATIO)};`
-                        }
-                      >
-                        {/* 蜡皮主色晕染（与真实捏捏外观一致） */}
-                        {previewShape !== "heart" ? (
-                          <View
-                            className="squishy-tint"
-                            style={`background-color: ${previewColor};`}
-                          />
-                        ) : null}
-                        {/* 白蜡膜层：外层乳白半透蜡壳（DIY 预览与实捏一致） */}
-                        {previewShape !== "heart" ? (
-                          <View
-                            className="squishy-wax-film"
-                            style={`opacity: ${WAX_FILM_OPACITY.toFixed(2)};`}
-                          />
-                        ) : null}
-                        {/* 蜡面粉霜颗粒：与实捏一致的哑光霜感 */}
-                        {previewShape !== "heart" ? (
-                          <View className="squishy-wax-frost" style="opacity: 0.6;" />
-                        ) : null}
-                        {renderEarParts(previewEar, previewColor, "preview")}
-                        {previewShape === "heart"
-                          ? renderHeartParts(previewColor, "preview")
-                          : null}
-                        {previewFillingVisible ? (
-                          <View
-                            className="squishy-filling-core"
-                            style={`background-color: ${previewFilling?.hex}; transform: translate(-50%, -50%); opacity: 0.55;`}
-                          />
-                        ) : null}
-                      </View>
-                    </View>
-                    {/* 配置行区 */}
-                    <View className="squishy-diy-rows">
-                      {/* 形象预设行 */}
-                      <View className="squishy-diy-row">
-                        <Text className="squishy-diy-row-label">{diy.presetLabel}</Text>
-                        <View className="squishy-diy-options">
-                          {diy.presets.map((preset) => (
-                            <View
-                              key={`preset-${preset.id}`}
-                              className={`squishy-diy-option squishy-diy-preset${
-                                selPreset === preset.id ? " is-active" : ""
-                              }`}
-                              onClick={() => {
-                                handleSelectPreset(preset.id);
-                              }}
-                            >
-                              <View
-                                className="squishy-diy-preset-dot"
-                                style={`background-color: ${preset.color};`}
-                              />
-                              <Text className="squishy-diy-option-text">{preset.name}</Text>
-                            </View>
-                          ))}
-                        </View>
-                      </View>
-                      {/* 身体行 */}
-                      <View className="squishy-diy-row">
-                        <Text className="squishy-diy-row-label">{diy.shapeLabel}</Text>
-                        <View className="squishy-diy-options">
-                          {diy.shapes.map((shape) => (
-                            <View
-                              key={`shape-${shape.id}`}
-                              className={`squishy-diy-option${
-                                selShape === shape.id ? " is-active" : ""
-                              }`}
-                              onClick={() => {
-                                setSelShape(shape.id);
-                                setSelPreset("");
-                              }}
-                            >
-                              {shape.id === "heart" ? (
-                                <View className="squishy-diy-shape squishy-shape-heart">
-                                  <View className="squishy-heart-core" />
-                                  <View className="squishy-heart-lobe squishy-heart-lobe-left" />
-                                  <View className="squishy-heart-lobe squishy-heart-lobe-right" />
-                                </View>
-                              ) : (
-                                <View className={`squishy-diy-shape squishy-shape-${shape.id}`} />
-                              )}
-                              <Text className="squishy-diy-option-text">{shape.name}</Text>
-                            </View>
-                          ))}
-                        </View>
-                      </View>
-                      {/* 耳朵行 */}
-                      <View className="squishy-diy-row">
-                        <Text className="squishy-diy-row-label">{diy.earLabel}</Text>
-                        <View className="squishy-diy-options">
-                          {diy.ears.map((ear) => (
-                            <View
-                              key={`ear-${ear.id}`}
-                              className={`squishy-diy-option${
-                                selEar === ear.id ? " is-active" : ""
-                              }`}
-                              onClick={() => {
-                                setSelEar(ear.id);
-                                setSelPreset("");
-                              }}
-                            >
-                              <View className={`squishy-diy-ear-icon squishy-ear-icon-${ear.id}`} />
-                              <Text className="squishy-diy-option-text">{ear.name}</Text>
-                            </View>
-                          ))}
-                        </View>
-                      </View>
-                      {/* 配色行 */}
-                      <View className="squishy-diy-row">
-                        <Text className="squishy-diy-row-label">{diy.colorLabel}</Text>
-                        <View className="squishy-diy-options">
-                          {diy.colors.map((color) => (
-                            <View
-                              key={`color-${color.id}`}
-                              className={`squishy-diy-color${
-                                selColor === color.id ? " is-active" : ""
-                              }`}
-                              onClick={() => {
-                                setSelColor(color.id);
-                                setSelPreset("");
-                              }}
-                            >
-                              <View
-                                className="squishy-diy-color-dot"
-                                style={`background-color: ${color.hex};`}
-                              />
-                            </View>
-                          ))}
-                        </View>
-                      </View>
-                      {/* 内馅行 */}
-                      <View className="squishy-diy-row">
-                        <Text className="squishy-diy-row-label">{diy.fillingLabel}</Text>
-                        <View className="squishy-diy-options">
-                          {diy.fillings.map((filling) => (
-                            <View
-                              key={`filling-${filling.id}`}
-                              className={`squishy-diy-option squishy-diy-filling${
-                                selFilling === filling.id ? " is-active" : ""
-                              }`}
-                              onClick={() => {
-                                setSelFilling(filling.id);
-                                setSelPreset("");
-                              }}
-                            >
-                              <View
-                                className="squishy-diy-filling-dot"
-                                style={
-                                  filling.id === "none"
-                                    ? "background-color: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.4);"
-                                    : `background-color: ${filling.hex};`
-                                }
-                              />
-                              <Text className="squishy-diy-option-text">{filling.name}</Text>
-                            </View>
-                          ))}
-                        </View>
-                      </View>
-                    </View>
-                  </View>
-                  {/* 确认按钮 */}
-                  <View className="squishy-diy-confirm" onClick={handleConfirmDiy}>
-                    <Text className="squishy-diy-confirm-text">{diy.confirmLabel}</Text>
-                  </View>
-                </View>
-              </View>
-            ) : null}
           </View>
         )}
       </View>
@@ -1493,6 +1307,190 @@ const playSfxOnce = (taro: openCardTaro | null, src: string, rate: number, volum
               <Text className="squishy-action-text">
                 {cardData?.views?.initial?.renewLabel ?? "再捏一次"}
               </Text>
+            </View>
+          </View>
+        </View>
+      ) : null}
+      {/* DIY 拼装形象工坊（覆盖主玩区，Footer 同步隐藏） */}
+      {diyOpen && diy ? (
+        <View className="squishy-diy-overlay">
+          <View className="squishy-diy-panel">
+            <View className="squishy-diy-head">
+              <Text className="squishy-diy-title">{diy.title}</Text>
+              <View className="squishy-diy-preview-wrap">
+                <View
+                  className={`squishy-diy-preview squishy-shape-${previewShape}`}
+                  style={
+                    previewShape === "heart"
+                      ? "background-color: transparent;"
+                      : `background-color: ${mixHexColor(previewColor, "#ffffff", WAX_MIX_RATIO)};`
+                  }
+                >
+                  {/* 蜡皮主色晕染（与真实捏捏外观一致） */}
+                  {previewShape !== "heart" ? (
+                    <View
+                      className="squishy-tint"
+                      style={`background-color: ${previewColor};`}
+                    />
+                  ) : null}
+                  {/* 白蜡膜层：外层乳白半透蜡壳（DIY 预览与实捏一致） */}
+                  {previewShape !== "heart" ? (
+                    <View
+                      className="squishy-wax-film"
+                      style={`opacity: ${WAX_FILM_OPACITY.toFixed(2)};`}
+                    />
+                  ) : null}
+                  {/* 蜡面粉霜颗粒：与实捏一致的哑光霜感 */}
+                  {previewShape !== "heart" ? (
+                    <View className="squishy-wax-frost" style="opacity: 0.6;" />
+                  ) : null}
+                  {renderEarParts(previewEar, previewColor, "preview")}
+                  {previewShape === "heart"
+                    ? renderHeartParts(previewColor, "preview")
+                    : null}
+                  {previewFillingVisible ? (
+                    <View
+                      className="squishy-filling-core"
+                      style={`background-color: ${previewFilling?.hex}; transform: translate(-50%, -50%); opacity: 0.55;`}
+                    />
+                  ) : null}
+                </View>
+              </View>
+              {/* 实时拼装预览（标题行右侧小球，随配置实时更新） */}
+              <View className="squishy-diy-close" onClick={handleCloseDiy}>
+                <Text className="squishy-diy-close-text">收起</Text>
+              </View>
+            </View>
+              {/* 配置行区 */}
+              <View className="squishy-diy-rows">
+                {/* 形象预设行 */}
+                <View className="squishy-diy-row">
+                  <View className="squishy-diy-options">
+                    <Text className="squishy-diy-row-label">{diy.presetLabel}</Text>
+                    {diy.presets.map((preset) => (
+                      <View
+                        key={`preset-${preset.id}`}
+                        className={`squishy-diy-option squishy-diy-preset${
+                          selPreset === preset.id ? " is-active" : ""
+                        }`}
+                        onClick={() => {
+                          handleSelectPreset(preset.id);
+                        }}
+                      >
+                        <View
+                          className="squishy-diy-preset-dot"
+                          style={`background-color: ${preset.color};`}
+                        />
+                        <Text className="squishy-diy-option-text">{preset.name}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+                {/* 身体行 */}
+                <View className="squishy-diy-row">
+                  <View className="squishy-diy-options">
+                    <Text className="squishy-diy-row-label">{diy.shapeLabel}</Text>
+                    {diy.shapes.map((shape) => (
+                      <View
+                        key={`shape-${shape.id}`}
+                        className={`squishy-diy-option${
+                          selShape === shape.id ? " is-active" : ""
+                        }`}
+                        onClick={() => {
+                          setSelShape(shape.id);
+                          setSelPreset("");
+                        }}
+                      >
+                        {shape.id === "heart" ? (
+                          <View className="squishy-diy-shape squishy-shape-heart">
+                            <View className="squishy-heart-core" />
+                            <View className="squishy-heart-lobe squishy-heart-lobe-left" />
+                            <View className="squishy-heart-lobe squishy-heart-lobe-right" />
+                          </View>
+                        ) : (
+                          <View className={`squishy-diy-shape squishy-shape-${shape.id}`} />
+                        )}
+                        <Text className="squishy-diy-option-text">{shape.name}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+                {/* 耳朵行 */}
+                <View className="squishy-diy-row">
+                  <View className="squishy-diy-options">
+                    <Text className="squishy-diy-row-label">{diy.earLabel}</Text>
+                    {diy.ears.map((ear) => (
+                      <View
+                        key={`ear-${ear.id}`}
+                        className={`squishy-diy-option${
+                          selEar === ear.id ? " is-active" : ""
+                        }`}
+                        onClick={() => {
+                          setSelEar(ear.id);
+                          setSelPreset("");
+                        }}
+                      >
+                        <View className={`squishy-diy-ear-icon squishy-ear-icon-${ear.id}`} />
+                        <Text className="squishy-diy-option-text">{ear.name}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+                {/* 配色行 */}
+                <View className="squishy-diy-row">
+                  <View className="squishy-diy-options">
+                    <Text className="squishy-diy-row-label">{diy.colorLabel}</Text>
+                    {diy.colors.map((color) => (
+                      <View
+                        key={`color-${color.id}`}
+                        className={`squishy-diy-color${
+                          selColor === color.id ? " is-active" : ""
+                        }`}
+                        onClick={() => {
+                          setSelColor(color.id);
+                          setSelPreset("");
+                        }}
+                      >
+                        <View
+                          className="squishy-diy-color-dot"
+                          style={`background-color: ${color.hex};`}
+                        />
+                      </View>
+                    ))}
+                  </View>
+                </View>
+                {/* 内馅行 */}
+                <View className="squishy-diy-row">
+                  <View className="squishy-diy-options">
+                    <Text className="squishy-diy-row-label">{diy.fillingLabel}</Text>
+                    {diy.fillings.map((filling) => (
+                      <View
+                        key={`filling-${filling.id}`}
+                        className={`squishy-diy-option squishy-diy-filling${
+                          selFilling === filling.id ? " is-active" : ""
+                        }`}
+                        onClick={() => {
+                          setSelFilling(filling.id);
+                          setSelPreset("");
+                        }}
+                      >
+                        <View
+                          className="squishy-diy-filling-dot"
+                          style={
+                            filling.id === "none"
+                              ? "background-color: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.4);"
+                              : `background-color: ${filling.hex};`
+                          }
+                        />
+                        <Text className="squishy-diy-option-text">{filling.name}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              </View>
+            {/* 确认按钮 */}
+            <View className="squishy-diy-confirm" onClick={handleConfirmDiy}>
+              <Text className="squishy-diy-confirm-text">{diy.confirmLabel}</Text>
             </View>
           </View>
         </View>

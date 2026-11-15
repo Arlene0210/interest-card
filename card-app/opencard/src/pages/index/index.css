@@ -1,5 +1,6 @@
 .widget-root {
   box-sizing: border-box;
+  position: relative;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -2346,8 +2347,9 @@
   line-height: 1.25rem;
 }
 
-/* ===================== DIY 制作弹层 ===================== */
+/* ===================== DIY 制作弹层（v12：横排单行选项 + px 尺寸链路，真机字体度量膨胀下不再行间重叠/截字） ===================== */
 
+/* 全卡遮罩：挂在 widget-root 直下，覆盖 header+body+footer（弹层打开时底部操作区一并盖住） */
 .squishy-diy-overlay {
   position: absolute;
   top: 0;
@@ -2357,33 +2359,38 @@
   z-index: 20;
   display: flex;
   flex-direction: column;
-  padding: 2vh 2.6vw;
-  border-radius: 10px;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 12px;
   background: rgba(34, 22, 16, 0.6);
 }
 
+/* 弹层面板：高度随内容自适应、在遮罩内垂直居中；两档槽高均留出冗余，禁止行间压缩 */
 .squishy-diy-panel {
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: stretch;
   width: 100%;
-  flex-grow: 1;
+  flex-grow: 0;
   flex-shrink: 1;
-  flex-basis: 0;
-  min-height: 0;
-  padding: 1.2vh 3vw 1vh;
-  gap: 0.9vh;
+  flex-basis: auto;
+  max-height: 100%;
+  padding: 8px 12px;
+  gap: 6px;
   border-radius: 12px;
   background: rgba(255, 249, 244, 0.98);
 }
 
+/* 标题行：标题 + 实时预览小球 + 收起（单行 36px） */
 .squishy-diy-head {
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
+  gap: 8px;
   width: 100%;
+  height: 36px;
   flex-grow: 0;
   flex-shrink: 0;
   flex-basis: auto;
@@ -2394,62 +2401,35 @@
   font-size: 15px;
   font-weight: 700;
   line-height: 20px;
-}
-
-.squishy-diy-close {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.6vh 3vw;
-  border-radius: 999px;
-  background: rgba(74, 44, 30, 0.08);
+  white-space: nowrap;
   flex-grow: 0;
   flex-shrink: 0;
   flex-basis: auto;
 }
 
-.squishy-diy-close-text {
-  color: #7a5a48;
-  font-size: 11px;
-  font-weight: 500;
-  line-height: 15px;
-}
-
-/* 主体：左预览 + 右配置行（预览区可纵向收缩：以行高为上限，不与确认钮争抢空间） */
-.squishy-diy-main {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  width: 100%;
-  gap: 3vw;
-  flex-grow: 1;
-  flex-shrink: 1;
-  flex-basis: 0;
-  min-height: 0;
-}
-
+/* 实时预览小球：32px 定宽定高，不占纵向空间 */
 .squishy-diy-preview-wrap {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  /* 预览区不再锁死正方形：宽度上限 27%，高度自适应剩余空间（min(宽, 高) 由内部 aspect-ratio 承担） */
-  width: 27%;
-  max-height: 100%;
+  width: 32px;
+  height: 32px;
+  margin-left: auto;
   flex-grow: 0;
-  flex-shrink: 1;
+  flex-shrink: 0;
   flex-basis: auto;
 }
 
 .squishy-diy-preview {
   position: relative;
-  width: 100%;
-  aspect-ratio: 1 / 1;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   box-shadow:
-    inset 0 -1.6vh 2.6vh rgba(160, 120, 100, 0.22),
-    inset 0 0.8vh 1.4vh rgba(255, 255, 255, 0.6),
-    0 1vh 2vh rgba(22, 24, 35, 0.14);
+    inset 0 -3px 5px rgba(160, 120, 100, 0.22),
+    inset 0 2px 3px rgba(255, 255, 255, 0.6),
+    0 2px 4px rgba(22, 24, 35, 0.14);
 }
 
 .squishy-diy-preview.squishy-shape-heart {
@@ -2464,48 +2444,75 @@
   border-radius: 46% 46% 40% 40% / 62% 62% 30% 30%;
 }
 
-/* 配置行区（行距收紧：5 行配置 + 确认钮全部落在弹层内） */
+/* 收起按钮：预览球之后 */
+.squishy-diy-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+  height: 26px;
+  border-radius: 999px;
+  background: rgba(74, 44, 30, 0.08);
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: auto;
+}
+
+.squishy-diy-close-text {
+  color: #7a5a48;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 15px;
+  white-space: nowrap;
+}
+
+/* 配置行区：纵向 5 行，px 行距；每行内容固定，不参与纵向压缩 */
 .squishy-diy-rows {
   display: flex;
   flex-direction: column;
   align-items: stretch;
   justify-content: center;
   width: 100%;
-  flex-grow: 1;
-  flex-shrink: 1;
-  flex-basis: 0;
-  min-width: 0;
-  gap: 0.7vh;
-}
-
-.squishy-diy-row {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  width: 100%;
-  gap: 2vw;
   flex-grow: 0;
   flex-shrink: 1;
   flex-basis: auto;
+  min-height: 0;
+  gap: 5px;
 }
 
-.squishy-diy-row-label {
-  width: 26px;
-  color: #8a6a55;
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 14px;
+/* 单个配置行：高度由行内容决定（横排选项 20px），行间不重叠 */
+.squishy-diy-row {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
   flex-grow: 0;
   flex-shrink: 0;
   flex-basis: auto;
 }
 
+/* 行标签：行首前缀（跟随选项流） */
+.squishy-diy-row-label {
+  color: #8a6a55;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 14px;
+  white-space: nowrap;
+  margin-right: 4px;
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: auto;
+  align-self: center;
+}
+
+/* 选项容器：横向单行流式，放不下时整块换行（wrap 是兜底而非压缩） */
 .squishy-diy-options {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
   align-items: center;
-  gap: 1.6vw;
+  align-content: flex-start;
+  gap: 4px;
   width: 100%;
   flex-grow: 1;
   flex-shrink: 1;
@@ -2513,14 +2520,15 @@
   min-width: 0;
 }
 
-/* 形状/内馅/层数选项（含图标与文字；内边距收紧防纵向超高） */
+/* 选项 chip：icon 左、文字右，单行高度锁 20px（文字行高 14px + 上下 padding + 描边） */
 .squishy-diy-option {
+  box-sizing: border-box;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
-  padding: 0.35vh 1.4vw;
-  border-radius: 10px;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 9px;
   border: 1px solid rgba(122, 82, 62, 0.18);
   background: rgba(255, 255, 255, 0.7);
   flex-grow: 0;
@@ -2537,15 +2545,14 @@
   color: #6b4a38;
   font-size: 10px;
   font-weight: 500;
-  line-height: 13px;
+  line-height: 14px;
   white-space: nowrap;
 }
 
-/* 迷你形状图标 */
+/* 迷你形状图标（横排） */
 .squishy-diy-shape {
-  width: 16px;
-  height: 16px;
-  margin-bottom: 0.3vh;
+  width: 13px;
+  height: 13px;
   background-color: #e8c9b8;
   border: 1px solid rgba(122, 82, 62, 0.25);
   box-sizing: border-box;
@@ -2569,13 +2576,13 @@
   background-color: transparent;
 }
 
-/* 颜色圆点选项 */
+/* 颜色圆点选项（配色行）：24px */
 .squishy-diy-color {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   border: 1px solid rgba(122, 82, 62, 0.18);
   background: rgba(255, 255, 255, 0.7);
@@ -2590,26 +2597,24 @@
 }
 
 .squishy-diy-color-dot {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
 }
 
 /* 内馅选项圆点 */
 .squishy-diy-filling-dot {
-  width: 12px;
-  height: 12px;
+  width: 11px;
+  height: 11px;
   border-radius: 50%;
-  margin-bottom: 0.3vh;
   box-sizing: border-box;
 }
 
 /* 形象预设选项（色点 + 名称） */
 .squishy-diy-preset-dot {
-  width: 20px;
-  height: 20px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  margin-bottom: 0.3vh;
   border: 1px solid rgba(255, 255, 255, 0.6);
   box-sizing: border-box;
   box-shadow: inset 0 -2px 3px rgba(120, 70, 55, 0.25);
@@ -2618,9 +2623,8 @@
 /* 耳朵选项迷你图标（CSS 结构件） */
 .squishy-diy-ear-icon {
   position: relative;
-  width: 16px;
-  height: 16px;
-  margin-bottom: 0.3vh;
+  width: 13px;
+  height: 13px;
   box-sizing: border-box;
 }
 
@@ -2673,16 +2677,16 @@
   height: 44%;
 }
 
-/* 确认按钮（高度收敛：为上方配置行让出空间，杜绝内容被按钮盖住） */
+/* 确认按钮：34px 高（文字行高 20px，上下各 7px 冗余），px 高度不再随槽高缩水裁字 */
 .squishy-diy-confirm {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: 4.6vh;
+  height: 34px;
   border-radius: 999px;
   background: #ff8fab;
-  box-shadow: 0 0.8vh 2vh rgba(255, 143, 171, 0.4);
+  box-shadow: 0 3px 8px rgba(255, 143, 171, 0.4);
   flex-grow: 0;
   flex-shrink: 0;
   flex-basis: auto;
@@ -2717,8 +2721,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 5.6vh;
-  height: 5.6vh;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -2738,40 +2742,12 @@
   border-radius: 50%;
 }
 
-/* DIY 打开按钮 */
-.squishy-diy-open {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 5.6vh;
-  padding: 0 2.4vw;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  flex-grow: 0;
-  flex-shrink: 0;
-  flex-basis: auto;
-}
-
-.squishy-diy-open.is-active {
-  border: 1px solid rgba(255, 143, 171, 0.9);
-  background: rgba(255, 143, 171, 0.14);
-}
-
-.squishy-diy-open-text {
-  color: var(--text-secondary);
-  font-size: 0.75rem;
-  font-weight: 500;
-  line-height: 1.0625rem;
-  white-space: nowrap;
-}
-
-/* 音效开关 */
+/* 音效开关：px 高度下限（vh 在 300 档约 14px 会裁 17px 行高的文字） */
 .squishy-sound-toggle {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 5.6vh;
+  min-height: 24px;
   padding: 0 2.6vw;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.1);
@@ -2808,14 +2784,14 @@
   flex-basis: auto;
 }
 
-/* 单钮（等分占满整行） */
+/* 单钮（等分占满整行）：px 最小高度（文字行高 22px，上下各 4px 冗余） */
 .squishy-action {
   box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 50%;
-  min-height: 8.6vh;
+  min-height: 30px;
   padding: 0 2.6vw;
   border-radius: var(--radius-xl);
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -2856,4 +2832,5 @@
   overflow: hidden;
   text-overflow: ellipsis;
   text-align: center;
+  max-width: 100%;
 }
