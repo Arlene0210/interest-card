@@ -409,7 +409,7 @@ export default function IndexPage() {
 
 /** 捏压音效源（按真实脆皮捏捏材料合成）：蜡皮脆裂（大豆蜡+蜂蜡壳）/ 蜡壳崩裂（捏爆）/ 内馅湿陷（超轻粘土+甘油+珍珠岩） */
 const SFX_WAX_CRACK = "https://lf-aihub.douyinvod.com/obj/developer/card_7706443532244896531_ext/5e120e6e715c.mp3";
-const SFX_WAX_BURST = "https://lf-aihub.douyinvod.com/obj/developer/card_7706443532244896531_ext/d8dd7c39eadf.mp3";
+const SFX_WAX_BURST = "https://lf-aihub.douyinvod.com/obj/developer/card_7706443532244896531_ext/62edcc9253ce.mp3";
 const SFX_CLAY_SQUISH = "https://lf-aihub.douyinvod.com/obj/developer/card_7706443532244896531_ext/ba1d5358112c.mp3";
 
 /** 播放一次指定音效（可指定播放速率与音量） */
