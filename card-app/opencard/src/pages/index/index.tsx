@@ -407,10 +407,10 @@ export default function IndexPage() {
     currentToyRef.current = activeToy ?? null;
   }, [activeToy]);
 
-/** 捏压音效源（按真实脆皮捏捏材料合成）：蜡皮脆裂（大豆蜡+蜂蜡壳）/ 蜡壳崩裂（捏爆）/ 内馅湿陷（超轻粘土+甘油+珍珠岩） */
-const SFX_WAX_CRACK = "https://lf-aihub.douyinvod.com/obj/developer/card_7706443532244896531_ext/5e120e6e715c.mp3";
-const SFX_WAX_BURST = "https://lf-aihub.douyinvod.com/obj/developer/card_7706443532244896531_ext/3da40bc00b52.mp3";
-const SFX_CLAY_SQUISH = "https://lf-aihub.douyinvod.com/obj/developer/card_7706443532244896531_ext/ba1d5358112c.mp3";
+/** 捏压音效源（按真实脆皮捏捏材料合成，响度已按宿主 BGM 掩蔽校准增强）：蜡皮脆裂（大豆蜡+蜂蜡壳）/ 蜡壳崩裂（捏爆）/ 内馅湿陷（超轻粘土+甘油+珍珠岩） */
+const SFX_WAX_CRACK = "https://lf-aihub.douyinvod.com/obj/developer/card_7706443532244896531_ext/2ab69d940daf.mp3";
+const SFX_WAX_BURST = "https://lf-aihub.douyinvod.com/obj/developer/card_7706443532244896531_ext/6bc2d34f6184.mp3";
+const SFX_CLAY_SQUISH = "https://lf-aihub.douyinvod.com/obj/developer/card_7706443532244896531_ext/94ac8324021b.mp3";
 
 /** 播放一次指定音效（可指定播放速率与音量） */
 const playSfxOnce = (taro: openCardTaro | null, src: string, rate: number, volume: number) => {
