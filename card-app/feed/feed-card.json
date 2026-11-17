@@ -6,7 +6,7 @@
   "TemplateStyleType": 6,
   "DataFetchMode": "dynamic",
   "CardBackgroundUrl": "https://lf-aihub.douyinpic.com/obj/developer/card_7706443532244896531_ext/be17a274ae3c.png",
-  "BgMusicUrl": "https://lf-aihub.douyinvod.com/obj/developer/card_7706443532244896531_ext/a1bfd146862b.mp3",
+  "BgMusicUrl": "https://lf-aihub.douyinvod.com/obj/developer/card_7706443532244896531_ext/4428ce6abcda.mp3",
   "Button": "查看解压报告",
   "RecommendReasonPrefix": "长按捏瘪",
   "RecommendReasonSuffix": "解压捏捏乐",
@@ -17,5 +17,5 @@
       "PageURL": "https://m.zjbyte.net/share/douyin/?token=RjZENTNBOTc1REI1NzZqdHB2bDYy&share_channel=copy"
     }
   ],
-  "__timestamp": 1794844744222
+  "__timestamp": 1794890626589
 }
