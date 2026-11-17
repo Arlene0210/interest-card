@@ -2466,17 +2466,15 @@
   white-space: nowrap;
 }
 
-/* 配置行区：纵向 5 行，px 行距；每行内容固定，不参与纵向压缩 */
+/* 配置行区：纵向 5 行，px 行距；行高由内容决定、整块不可压缩（压缩会让行溢出与确认钮叠压） */
 .squishy-diy-rows {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  justify-content: center;
   width: 100%;
   flex-grow: 0;
-  flex-shrink: 1;
+  flex-shrink: 0;
   flex-basis: auto;
-  min-height: 0;
   gap: 5px;
 }
 
@@ -2505,7 +2503,8 @@
   align-self: center;
 }
 
-/* 选项容器：横向单行流式，放不下时整块换行（wrap 是兜底而非压缩） */
+/* 选项容器：横向流式，放不下时整块换行；高度由内容决定（Lynx 中父行高度 auto，
+   禁止用 flex-basis: 0 + grow 占位——会按 0px 参与父行固有高度计算导致行坍缩叠压） */
 .squishy-diy-options {
   display: flex;
   flex-direction: row;
@@ -2514,10 +2513,9 @@
   align-content: flex-start;
   gap: 4px;
   width: 100%;
-  flex-grow: 1;
-  flex-shrink: 1;
-  flex-basis: 0;
-  min-width: 0;
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: auto;
 }
 
 /* 选项 chip：icon 左、文字右，单行高度锁 20px（文字行高 14px + 上下 padding + 描边） */
