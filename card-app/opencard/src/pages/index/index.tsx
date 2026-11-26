@@ -1003,20 +1003,30 @@ const playSfxOnce = (taro: openCardTaro | null, src: string, rate: number, volum
             ? "0"
             : undefined;
     const radiusStyle = shellRadius ? ` border-radius: ${shellRadius};` : "";
-    const ballStyle = isHeart && !(bursting || burstShaped)
-      ? `transform: ${posPrefix}${offsetTranslate}${squishScale};`
-      : `background-color: ${shellColor};${radiusStyle} transform: ${posPrefix}${offsetTranslate}${squishScale};`;
+    // 外层容器样式：尺寸 + 形变/堆叠 transform（耳朵/蝴蝶结挂此层，不受球壳裁剪）
+    const wrapStyle = `transform: ${posPrefix}${offsetTranslate}${squishScale};`;
+    // 球壳样式：底色 + 形状圆角（材质层由壳的 overflow hidden 按椭圆轮廓裁切）
+    const shellStyle =
+      isHeart && !(bursting || burstShaped)
+        ? ""
+        : `background-color: ${shellColor};${radiusStyle}`;
     return (
       <View
         key={`squishy-${index}`}
-        className={`squishy-ball squishy-shape-${shapeId}${index === 0 ? " is-base" : " is-stacked"}${
-          stackCount > 3 ? " is-dense" : ""
-        }${bursting ? " is-bursting" : ""}${burstShaped ? " is-remnant" : ""}`}
-        style={`${widthStyle}${ballStyle}`}
+        className={`squishy-ball-wrap${index === 0 ? " is-base" : " is-stacked"}${
+          bursting ? " is-bursting" : ""
+        }${burstShaped ? " is-remnant" : ""}`}
+        style={`${widthStyle}${wrapStyle}`}
         onTouchStart={handlePressStart}
         onTouchEnd={handlePressEnd}
         onTouchCancel={handlePressEnd}
       >
+        <View
+          className={`squishy-ball squishy-shape-${shapeId}${
+            stackCount > 3 ? " is-dense" : ""
+          }${bursting ? " is-bursting" : ""}${burstShaped ? " is-remnant" : ""}`}
+          style={shellStyle}
+        >
         {/* 主色晕染层（蜡皮的彩色晕染） */}
         <View
           className="squishy-tint"
@@ -1032,10 +1042,6 @@ const playSfxOnce = (taro: openCardTaro | null, src: string, rate: number, volum
           className="squishy-wax-frost"
           style={`opacity: ${(bursting ? 0.6 * 0.45 : burstShaped ? 0.6 * 0.3 : 0.6).toFixed(2)};`}
         />
-        {/* 耳朵/头顶装饰（结构件，叠在身体上方） */}
-        {renderEarParts(earId, toyColor, `ball-${index}`)}
-        {/* 爱心由三片结构件组成（其余形状为容器本体） */}
-        {isHeart && !(bursting || burstShaped) ? renderHeartParts(toyColor, `ball-${index}`) : null}
         <View className="squishy-highlight" />
         {/* 粘土主凹陷：捏的位置深影内陷 + 下缘受光隆起唇（陶土记忆：松手保留） */}
         <View
@@ -1107,6 +1113,11 @@ const playSfxOnce = (taro: openCardTaro | null, src: string, rate: number, volum
           </View>
         ) : null}
       </View>
+      {/* 耳朵/头顶装饰（结构件，叠在球壳之上）：挂外层容器不受球壳椭圆轮廓裁剪，超出球体的部分完整显示 */}
+      {renderEarParts(earId, toyColor, `ball-${index}`)}
+      {/* 爱心由三片结构件组成（其余形状为容器本体）；同样挂外层容器完整显示 */}
+      {isHeart && !(bursting || burstShaped) ? renderHeartParts(toyColor, `ball-${index}`) : null}
+    </View>
     );
   };
 

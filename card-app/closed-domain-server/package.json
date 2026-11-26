@@ -10,10 +10,10 @@
     "start:prod": "node dist/main"
   },
   "dependencies": {
-    "@open-dy/ai_coding_sdk": "^1.0.25",
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
+    "@open-dy/ai_coding_sdk": "^1.0.27",
     "mysql2": "3.24.4",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"

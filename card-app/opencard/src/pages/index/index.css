@@ -201,10 +201,28 @@
   z-index: 2;
 }
 
-/* 捏捏球主体（蜡皮壳）：泛白底色 + 主色晕染层（颜色、宽度、高度与形变由 TSX 内联提供） */
-.squishy-ball {
+/* 球体外层容器：承载尺寸、形变 transform 与耳朵/蝴蝶结/爱心结构件（不裁剪，装饰超出球体轮廓完整显示） */
+.squishy-ball-wrap {
   position: relative;
   width: 40%;
+  transition: transform 0.12s ease-out;
+}
+
+/* 捏爆塌陷（非弹性）：馅料爆出同时壳体一次塌到位，无回弹过冲（transform 作用在 wrap 层） */
+.squishy-ball-wrap.is-bursting {
+  transition: transform 0.42s cubic-bezier(0.55, 0, 0.85, 0.36);
+}
+
+/* 爆后残体：在塌陷基础上轻微落定（继续加深，不向上回弹） */
+.squishy-ball-wrap.is-remnant {
+  transition: transform 0.28s cubic-bezier(0.3, 0, 0.6, 0.3);
+}
+
+/* 捏捏球壳（材质层裁剪容器）：泛白底色 + 主色晕染层（颜色与圆角由 TSX 内联提供） */
+.squishy-ball {
+  position: relative;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
   border-radius: 50%;
   background-image: radial-gradient(
@@ -217,17 +235,15 @@
     inset 0 -2.2vh 3.5vh rgba(160, 150, 130, 0.18),
     inset 0 1vh 1.8vh rgba(255, 255, 255, 0.7),
     0 1.2vh 2.4vh rgba(22, 24, 35, 0.16);
-  transition: transform 0.12s ease-out;
 }
 
-/* 捏爆塌陷（非弹性）：馅料爆出同时壳体一次塌到位，无回弹过冲 */
+/* 壳体圆角过渡（塌陷/残体的不规则变形圆角） */
 .squishy-ball.is-bursting {
-  transition: transform 0.42s cubic-bezier(0.55, 0, 0.85, 0.36), border-radius 0.42s ease-out;
+  transition: border-radius 0.42s ease-out;
 }
 
-/* 爆后残体：在塌陷基础上轻微落定（继续加深，不向上回弹） */
 .squishy-ball.is-remnant {
-  transition: transform 0.28s cubic-bezier(0.3, 0, 0.6, 0.3), border-radius 0.28s ease-out;
+  transition: border-radius 0.28s ease-out;
 }
 
 /* 蜡皮主色晕染层（绝对铺满，透明度表达蜡壳的彩色晕染） */
@@ -302,7 +318,7 @@
 }
 
 /* 绝对定位的堆叠球（非首只）：宽度由 TSX 内联统一给值（Lynx 无 auto 收缩） */
-.squishy-ball.is-stacked {
+.squishy-ball-wrap.is-stacked {
   position: absolute;
   top: 50%;
   left: 50%;
