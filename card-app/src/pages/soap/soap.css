@@ -1,0 +1,201 @@
+/* 切香皂页面动画：小刀从左向右扫切、切面高光、切屑崩落、皂片落台留存。
+   尺寸基准 designWidth=375（css px 与设备逻辑像素 1:1）；内联样式仅用 %/deg/ms 与颜色。 */
+
+/* 小刀：刀柄 + 刀刃，从香皂左侧滑入、向右扫出 */
+.soap-knife {
+  position: absolute;
+  left: -36%;
+  width: 26%;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  animation: soap-knife-sweep 0.62s ease-in-out both;
+  z-index: 4;
+}
+.soap-knife-handle {
+  width: 34%;
+  height: 15px;
+  border-radius: 4px;
+  background: #4a4566;
+}
+.soap-knife-blade {
+  width: 66%;
+  height: 10px;
+  border-radius: 0 6px 6px 2px;
+  background: linear-gradient(180deg, #f7f9ff 0%, #c9d0e0 55%, #99a2b8 100%);
+  border-bottom: 2px solid #7e879e;
+}
+@keyframes soap-knife-sweep {
+  0% {
+    left: -36%;
+    opacity: 0;
+    transform: rotate(-16deg) translateY(-8px);
+  }
+  16% {
+    opacity: 1;
+  }
+  50% {
+    transform: rotate(-11deg) translateY(0);
+  }
+  86% {
+    opacity: 1;
+  }
+  100% {
+    left: 106%;
+    opacity: 0;
+    transform: rotate(-16deg) translateY(-8px);
+  }
+}
+
+/* 切割瞬间的切面高光 */
+.soap-cut-flash {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    #ffffff 22%,
+    #ffffff 78%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: soap-cut-flash 0.34s ease-out both;
+  z-index: 3;
+}
+@keyframes soap-cut-flash {
+  0% {
+    opacity: 0;
+    transform: scaleX(0.25);
+  }
+  35% {
+    opacity: 0.95;
+    transform: scaleX(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scaleX(1);
+  }
+}
+
+/* 崩落的切屑：三向（左飘/直落/右飘）× 三档尺寸 */
+.soap-shaving {
+  position: absolute;
+  width: 12px;
+  height: 8px;
+  border-radius: 2px;
+  animation-duration: 1.6s;
+  animation-timing-function: cubic-bezier(0.3, 0.55, 0.5, 1);
+  animation-fill-mode: both;
+  z-index: 5;
+}
+.soap-shaving--l {
+  animation-name: soap-shaving-fall-l;
+}
+.soap-shaving--c {
+  animation-name: soap-shaving-fall-c;
+}
+.soap-shaving--r {
+  animation-name: soap-shaving-fall-r;
+}
+.soap-shaving--s {
+  width: 7px;
+  height: 5px;
+  border-radius: 1px;
+}
+.soap-shaving--m {
+  width: 12px;
+  height: 8px;
+}
+.soap-shaving--lg {
+  width: 16px;
+  height: 10px;
+  border-radius: 3px;
+}
+@keyframes soap-shaving-fall-c {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  55% {
+    bottom: 13%;
+    transform: translate(0, 0) rotate(90deg);
+    opacity: 0.92;
+  }
+  80% {
+    bottom: 12.5%;
+    opacity: 0.92;
+  }
+  100% {
+    bottom: 12%;
+    transform: translate(0, 0) rotate(150deg);
+    opacity: 0;
+  }
+}
+@keyframes soap-shaving-fall-l {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  55% {
+    bottom: 13%;
+    transform: translate(-22px, 0) rotate(-120deg);
+    opacity: 0.92;
+  }
+  80% {
+    bottom: 12.5%;
+    opacity: 0.92;
+  }
+  100% {
+    bottom: 12%;
+    transform: translate(-24px, 0) rotate(-210deg);
+    opacity: 0;
+  }
+}
+@keyframes soap-shaving-fall-r {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  55% {
+    bottom: 13%;
+    transform: translate(22px, 0) rotate(140deg);
+    opacity: 0.92;
+  }
+  80% {
+    bottom: 12.5%;
+    opacity: 0.92;
+  }
+  100% {
+    bottom: 12%;
+    transform: translate(24px, 0) rotate(230deg);
+    opacity: 0;
+  }
+}
+
+/* 切下的皂片：从切面坠落到台面并留存 */
+.soap-slice-slot {
+  position: absolute;
+  bottom: 9px;
+}
+.soap-slice {
+  width: 36px;
+  height: 10px;
+  border-radius: 3px;
+  border: 1px solid rgba(22, 24, 31, 0.12);
+  animation: soap-slice-drop 0.5s cubic-bezier(0.3, 0.7, 0.5, 1) both;
+}
+@keyframes soap-slice-drop {
+  0% {
+    transform: translateY(-46px) rotate(0deg);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+}
